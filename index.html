@@ -1,808 +1,1656 @@
-from pathlib import Path
-from zipfile import ZipFile
-
-html = r"""<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NovaMotion Ultimate Studio</title>
-
 <style>
-*{box-sizing:border-box}
-
-body{
-margin:0;
-background:#0b0b0b;
-font-family:Arial,sans-serif;
-color:white;
-overflow:hidden;
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0a0a;--surface:#121212;--panel:#1a1a1a;--border:#2a2a2a;
+  --accent:#3b82f6;--accent2:#8b5cf6;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;
+  --text:#f0f0f0;--muted:#888;
 }
-
-header{
-height:60px;
-background:#151515;
-display:flex;
-align-items:center;
-justify-content:space-between;
-padding:10px 20px;
-border-bottom:2px solid #222;
-}
-
-header h1{
-margin:0;
-font-size:22px;
-}
-
-#main{
-display:grid;
-grid-template-columns:320px 1fr;
-height:calc(100vh - 60px);
-}
-
-#sidebar{
-background:#111;
-border-right:2px solid #222;
-overflow:auto;
-padding:12px;
-resize:horizontal;
-min-width:250px;
-max-width:600px;
-}
-
-.panel{
-background:#1b1b1b;
-padding:12px;
-border-radius:10px;
-margin-bottom:15px;
-}
-
-.panel h2{
-margin-top:0;
-font-size:18px;
-}
-
-button,input,select,textarea{
-border:none;
-border-radius:6px;
-padding:8px;
-}
-
-button{
-background:#2563eb;
-color:white;
-cursor:pointer;
-margin-top:5px;
-}
-
-button:hover{
-opacity:0.9;
-}
-
-textarea,
-input[type=color],
-input[type=range]{
-width:100%;
-}
-
-textarea{
-height:70px;
-background:#0f0f0f;
-color:white;
-border:1px solid #333;
-}
-
-#workspace{
-display:flex;
-flex-direction:column;
-height:100%;
-}
-
-#previewContainer{
-flex:1;
-background:#000;
-display:flex;
-align-items:center;
-justify-content:center;
-position:relative;
-overflow:hidden;
-resize:vertical;
-min-height:300px;
-}
-
-canvas{
-background:#111;
-border:3px solid #333;
-max-width:100%;
-max-height:100%;
-}
-
-#recordIndicator{
-position:absolute;
-top:15px;
-right:15px;
-background:red;
-padding:10px 15px;
-border-radius:30px;
-display:none;
-font-weight:bold;
-animation:blink 1s infinite;
-}
-
-@keyframes blink{
-0%{opacity:1}
-50%{opacity:0.4}
-100%{opacity:1}
-}
-
-#timeline{
-height:260px;
-background:#0f0f0f;
-border-top:2px solid #222;
-padding:10px;
-overflow:auto;
-}
-
-.track{
-background:#1d1d1d;
-padding:10px;
-border-radius:8px;
-margin-bottom:10px;
-min-height:60px;
-}
-
-.clip{
-display:inline-block;
-padding:8px;
-background:#2563eb;
-border-radius:6px;
-margin:4px;
-cursor:grab;
-user-select:none;
-}
-
-.clip:active{
-cursor:grabbing;
-}
-
-#scenes{
-display:flex;
-gap:10px;
-padding:10px;
-background:#141414;
-border-top:2px solid #222;
-overflow-x:auto;
-}
-
-.scene{
-min-width:180px;
-height:100px;
-background:#1e1e1e;
-border:2px solid #444;
-border-radius:8px;
-display:flex;
-align-items:center;
-justify-content:center;
-cursor:pointer;
-position:relative;
-}
-
-.scene:hover{
-border-color:#2563eb;
-}
-
-.scene.active{
-border-color:#00ff90;
-}
-
-.scene span{
-position:absolute;
-bottom:5px;
-left:5px;
-font-size:12px;
-background:black;
-padding:2px 6px;
-border-radius:4px;
-}
-
-.mediaItem{
-background:#242424;
-padding:8px;
-border-radius:6px;
-margin-bottom:6px;
-font-size:13px;
-}
-
-.small{
-font-size:12px;
-color:#aaa;
-}
-
-audio{
-width:100%;
-margin-top:10px;
-}
-
+body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;color:var(--text);overflow:hidden;height:100vh;display:flex;flex-direction:column}
+/* HEADER */
+header{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;gap:12px}
+header h1{font-size:17px;font-weight:700;background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.header-controls{display:flex;gap:6px;align-items:center}
+.btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s}
+.btn:hover{border-color:var(--accent);background:#1e2a3a}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn.danger:hover{background:#2a1a1a}
+.btn.success{border-color:var(--green);color:var(--green)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:#2563eb}
+#recBtn.recording{background:var(--red);border-color:var(--red);color:#fff;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+/* LAYOUT */
+#app{display:flex;flex:1;overflow:hidden}
+#sidebar{width:300px;min-width:220px;max-width:420px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;resize:horizontal}
+#workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
+/* TABS */
+.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0}
+.tab{padding:8px 14px;cursor:pointer;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s}
+.tab.active{color:var(--accent);border-color:var(--accent)}
+.tab-panel{display:none;padding:12px;flex-direction:column;gap:10px}
+.tab-panel.active{display:flex}
+/* PANEL */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px}
+.panel h3{font-size:13px;font-weight:600;margin-bottom:10px;color:#ccc}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+input[type=range]{width:100%;accent-color:var(--accent);height:4px;border-radius:2px}
+input[type=color]{width:100%;height:32px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;padding:2px}
+input[type=text],input[type=number],select,textarea{width:100%;background:#0f0f0f;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px}
+textarea{height:60px;resize:vertical;font-family:inherit}
+select{cursor:pointer}
+input[type=range]::-webkit-slider-thumb{cursor:pointer}
+.row{display:flex;gap:8px;align-items:center}
+.row label{margin:0;white-space:nowrap}
+.val{font-size:12px;color:var(--accent);min-width:30px;text-align:right}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+/* PREVIEW */
+#previewWrap{flex:1;background:#000;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:200px}
+canvas{max-width:100%;max-height:100%;border:1px solid #333;display:block}
+#recBadge{position:absolute;top:12px;right:12px;background:var(--red);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;display:none;animation:pulse 1s infinite}
+#timecode{position:absolute;bottom:12px;right:12px;font-size:11px;color:#666;font-family:monospace;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px}
+/* TIMELINE */
+#timeline{height:220px;background:#080808;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column}
+#tl-header{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
+#tl-header span{font-size:12px;font-weight:600;color:var(--muted)}
+#playhead-wrap{position:relative;flex:1;overflow:hidden}
+#tracks-container{display:flex;flex-direction:column;height:100%;overflow:hidden}
+.track{display:flex;align-items:center;height:46px;border-bottom:1px solid var(--border);flex-shrink:0}
+.track-label{width:80px;padding:0 8px;font-size:11px;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border)}
+.track-lane{flex:1;position:relative;height:100%;overflow:hidden}
+.clip{position:absolute;top:6px;height:32px;border-radius:5px;cursor:grab;display:flex;align-items:center;padding:0 8px;font-size:11px;user-select:none;border:1px solid rgba(255,255,255,.1);transition:opacity .15s}
+.clip:active{cursor:grabbing;opacity:.7}
+.clip.video{background:#1e3a5f;color:#93c5fd}
+.clip.text{background:#2d1b4e;color:#c4b5fd}
+.clip.audio{background:#1a3a2a;color:#86efac}
+.clip.fx{background:#3a2a1a;color:#fed7aa}
+#playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);pointer-events:none;z-index:10}
+#tl-ruler{height:20px;background:var(--panel);border-bottom:1px solid var(--border);position:relative;flex-shrink:0}
+/* SCENES */
+#scenes-bar{height:90px;background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 12px;overflow-x:auto;flex-shrink:0}
+.scene-thumb{min-width:120px;height:68px;border:2px solid var(--border);border-radius:7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;background:var(--surface);position:relative;flex-shrink:0;transition:border-color .15s}
+.scene-thumb:hover{border-color:#555}
+.scene-thumb.active{border-color:var(--green)}
+.scene-thumb canvas{border-radius:4px}
+.scene-label{position:absolute;bottom:4px;left:6px;font-size:10px;color:var(--muted)}
+.add-scene{border-style:dashed;color:var(--muted)}
+.add-scene:hover{color:var(--text);border-color:var(--accent)}
+/* MEDIA LIBRARY */
+.media-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;background:#0f0f0f;cursor:pointer;border:1px solid transparent}
+.media-item:hover{border-color:var(--border)}
+.media-icon{font-size:16px;flex-shrink:0}
+/* FX CHAIN */
+.fx-slot{background:#0f0f0f;border:1px solid var(--border);border-radius:6px;padding:8px;display:flex;align-items:center;justify-content:space-between;font-size:12px}
+.fx-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.fx-dot.off{background:var(--muted)}
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
+/* AUDIO VIZ */
+#vumeter{display:flex;gap:2px;align-items:flex-end;height:40px;padding:4px 0}
+.vu-bar{width:8px;border-radius:2px;background:var(--green);transition:height .05s}
+/* KEYFRAME EDITOR */
+.kf-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0;border-bottom:1px solid #1e1e1e}
+.kf-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);flex-shrink:0;cursor:pointer}
+.kf-name{color:var(--muted);width:90px;flex-shrink:0}
+.kf-val{color:var(--accent);width:40px;text-align:right}
+/* Color stops */
+.gradient-stop{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+/* Waveform canvas */
+#waveformCanvas{width:100%;height:32px;border-radius:4px;background:#0a0a0a;border:1px solid var(--border)}
 </style>
 </head>
 <body>
 
 <header>
-<h1>NovaMotion Ultimate Studio</h1>
-
-<div>
-<button onclick="playScene()">▶ Lecture</button>
-<button onclick="startRecording()">⏺ REC</button>
-<button onclick="stopRecording()">■ STOP</button>
-<button onclick="exportFrame()">📷 PNG</button>
-</div>
+  <h1>⬡ NovaMotion Ultimate Studio</h1>
+  <div class="header-controls">
+    <button class="btn" onclick="setTime(0)">⏮</button>
+    <button class="btn success" id="playBtn" onclick="togglePlay()">▶ Lecture</button>
+    <button class="btn" id="recBtn" onclick="toggleRecord()">⏺ REC</button>
+    <button class="btn" onclick="exportFrame()">📷 PNG</button>
+    <button class="btn" onclick="exportVideo()">🎬 Exporter</button>
+    <span id="fpsDisplay" style="font-size:12px;color:var(--muted);min-width:50px">-- fps</span>
+    <select style="background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12px" onchange="changeResolution(this.value)">
+      <option value="1280,720">1280×720</option>
+      <option value="1920,1080">1920×1080</option>
+      <option value="854,480">854×480</option>
+      <option value="720,720">720×720 (Carré)</option>
+      <option value="1080,1920">1080×1920 (Portrait)</option>
+    </select>
+  </div>
 </header>
 
-<div id="main">
+<div id="app">
+  <!-- SIDEBAR -->
+  <div id="sidebar">
+    <div class="tabs">
+      <div class="tab active" onclick="showTab('text')">Texte</div>
+      <div class="tab" onclick="showTab('media')">Média</div>
+      <div class="tab" onclick="showTab('fx')">FX</div>
+      <div class="tab" onclick="showTab('audio')">Audio</div>
+      <div class="tab" onclick="showTab('kf')">Keyframes</div>
+    </div>
 
-<div id="sidebar">
+    <!-- TEXTE -->
+    <div class="tab-panel active" id="tab-text">
+      <div class="panel">
+        <h3>Texte</h3>
+        <label>Contenu</label>
+        <textarea id="textInput">Bienvenue sur NovaMotion</textarea>
+        <label style="margin-top:8px">Police</label>
+        <select id="fontFamily">
+          <option>Arial</option><option>Impact</option><option>Georgia</option>
+          <option>Courier New</option><option>Trebuchet MS</option><option>Verdana</option>
+        </select>
+        <div class="row" style="margin-top:8px">
+          <label>Taille</label>
+          <input type="range" id="fontSize" min="12" max="150" value="60" oninput="document.getElementById('fsVal').textContent=this.value">
+          <span class="val" id="fsVal">60</span>
+        </div>
+        <div class="row">
+          <label>Opacité</label>
+          <input type="range" id="textOpacity" min="0" max="100" value="100" oninput="document.getElementById('toVal').textContent=this.value+'%'">
+          <span class="val" id="toVal">100%</span>
+        </div>
+        <div class="grid2" style="margin-top:8px">
+          <div>
+            <label>Couleur</label>
+            <input type="color" id="textColor" value="#ffffff">
+          </div>
+          <div>
+            <label>Ombre</label>
+            <input type="color" id="shadowColor" value="#000000">
+          </div>
+        </div>
+        <div class="row" style="margin-top:6px">
+          <label>Flou ombre</label>
+          <input type="range" id="shadowBlur" min="0" max="30" value="6">
+          <span class="val">6</span>
+        </div>
+        <label style="margin-top:8px">Position X</label>
+        <input type="range" id="textX" min="0" max="1280" value="80" oninput="syncText()">
+        <label>Position Y</label>
+        <input type="range" id="textY" min="0" max="720" value="100" oninput="syncText()">
+        <label style="margin-top:8px">Animation texte</label>
+        <select id="textAnim">
+          <option value="none">Aucune</option>
+          <option value="typewriter">Machine à écrire</option>
+          <option value="glitch">Glitch</option>
+          <option value="wave">Vague</option>
+          <option value="bounce">Bounce</option>
+          <option value="fade">Fade In</option>
+          <option value="slide">Slide In</option>
+          <option value="neon">Neon Glow</option>
+          <option value="rainbow">Arc-en-ciel</option>
+          <option value="explode">Explosion</option>
+        </select>
+        <div class="grid2" style="margin-top:8px">
+          <button class="btn primary" onclick="applyText()">✓ Appliquer</button>
+          <button class="btn" onclick="addTextLayer()">+ Couche</button>
+        </div>
+      </div>
 
-<div class="panel">
-<h2>Texte</h2>
+      <div class="panel">
+        <h3>Fond</h3>
+        <label>Type</label>
+        <select id="bgType" onchange="updateBgType()">
+          <option value="solid">Couleur unie</option>
+          <option value="gradient">Dégradé</option>
+          <option value="pattern">Motif</option>
+          <option value="animated">Fond animé</option>
+        </select>
+        <div id="bgSolid" style="margin-top:8px">
+          <input type="color" id="bgColor" value="#111111">
+        </div>
+        <div id="bgGradient" style="display:none;margin-top:8px">
+          <div class="gradient-stop">
+            <input type="color" id="grad1" value="#0a0a2e">
+            <input type="range" id="grad1p" min="0" max="100" value="0" style="flex:1">
+          </div>
+          <div class="gradient-stop">
+            <input type="color" id="grad2" value="#1a0533">
+            <input type="range" id="grad2p" min="0" max="100" value="50" style="flex:1">
+          </div>
+          <div class="gradient-stop">
+            <input type="color" id="grad3" value="#000f33">
+            <input type="range" id="grad3p" min="0" max="100" value="100" style="flex:1">
+          </div>
+          <label>Angle</label>
+          <input type="range" id="gradAngle" min="0" max="360" value="135">
+        </div>
+        <div id="bgPattern" style="display:none;margin-top:8px">
+          <select id="patternType">
+            <option value="grid">Grille</option>
+            <option value="dots">Points</option>
+            <option value="hex">Hexagones</option>
+            <option value="stripes">Rayures</option>
+          </select>
+          <input type="color" id="patternColor" value="#1a2a1a" style="margin-top:6px">
+        </div>
+        <div id="bgAnimated" style="display:none;margin-top:8px">
+          <select id="bgAnimType">
+            <option value="particles">Particules</option>
+            <option value="waves">Vagues</option>
+            <option value="matrix">Matrix</option>
+            <option value="aurora">Aurore</option>
+            <option value="plasma">Plasma</option>
+          </select>
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:8px" onclick="applyBackground()">Appliquer fond</button>
+      </div>
+    </div>
 
-<textarea id="textInput">Bienvenue sur NovaMotion Ultimate</textarea>
+    <!-- MEDIA -->
+    <div class="tab-panel" id="tab-media">
+      <div class="panel">
+        <h3>Importer</h3>
+        <input type="file" id="imageLoader" accept="image/*" style="font-size:12px;width:100%;color:var(--muted)">
+        <div style="margin-top:8px">
+          <label>Position X</label>
+          <input type="range" id="imgX" min="0" max="1280" value="640" oninput="syncImg()">
+          <label>Position Y</label>
+          <input type="range" id="imgY" min="0" max="720" value="360" oninput="syncImg()">
+          <label>Échelle</label>
+          <input type="range" id="imgScale" min="10" max="300" value="100" oninput="syncImg()">
+          <label>Rotation</label>
+          <input type="range" id="imgRot" min="-180" max="180" value="0" oninput="syncImg()">
+          <label>Opacité</label>
+          <input type="range" id="imgOpacity" min="0" max="100" value="100" oninput="syncImg()">
+        </div>
+        <h3 style="margin-top:12px">Animation image</h3>
+        <div class="grid3">
+          <button class="btn" onclick="spinImage()">↻ Spin</button>
+          <button class="btn" onclick="flashImage()">⚡ Flash</button>
+          <button class="btn" onclick="bounceImage()">↕ Bounce</button>
+          <button class="btn" onclick="pulseImage()">◎ Pulse</button>
+          <button class="btn" onclick="shakeImage()">≈ Shake</button>
+          <button class="btn" onclick="floatImage()">⇡ Float</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Bibliothèque de médias</h3>
+        <div id="mediaLibrary" style="display:flex;flex-direction:column;gap:5px"></div>
+        <div style="margin-top:8px;font-size:11px;color:var(--muted)">0 fichier(s) importé(s)</div>
+      </div>
+    </div>
 
-<label>Taille</label>
-<input type="range" id="fontSize" min="20" max="120" value="60">
+    <!-- FX -->
+    <div class="tab-panel" id="tab-fx">
+      <div class="panel">
+        <h3>Effets visuels</h3>
+        <label>Transition</label>
+        <select id="transitionType">
+          <option>Fade</option><option>Slide Left</option><option>Slide Right</option>
+          <option>Zoom In</option><option>Zoom Out</option><option>Flash</option>
+          <option>Blur</option><option>Wipe</option><option>Spiral</option>
+          <option>Pixel Dissolve</option>
+        </select>
+        <div class="row" style="margin-top:8px">
+          <label>Durée (ms)</label>
+          <input type="number" id="transDuration" value="800" style="width:70px;flex-shrink:0">
+        </div>
+        <button class="btn primary" style="width:100%;margin-top:6px" onclick="applyTransition()">Appliquer transition</button>
+      </div>
 
-<label>Couleur</label>
-<input type="color" id="textColor" value="#ffffff">
+      <div class="panel">
+        <h3>Post-traitement</h3>
+        <div class="fx-slot" id="fxBrightness">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot"></div><span>Luminosité</span></div>
+          <input type="range" min="-100" max="100" value="0" style="width:80px" oninput="applyFX()">
+        </div>
+        <div class="fx-slot" id="fxContrast" style="margin-top:5px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot"></div><span>Contraste</span></div>
+          <input type="range" min="-100" max="100" value="0" style="width:80px" oninput="applyFX()">
+        </div>
+        <div class="fx-slot" id="fxSaturation" style="margin-top:5px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot"></div><span>Saturation</span></div>
+          <input type="range" min="-100" max="100" value="0" style="width:80px" oninput="applyFX()">
+        </div>
+        <div class="fx-slot" id="fxVignette" style="margin-top:5px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="vigDot"></div><span>Vignette</span></div>
+          <input type="range" min="0" max="100" value="0" style="width:80px" id="vigAmt" oninput="document.getElementById('vigDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
+        </div>
+        <div class="fx-slot" id="fxChromo" style="margin-top:5px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="chromoDot"></div><span>Aberration chromatique</span></div>
+          <input type="range" min="0" max="20" value="0" style="width:80px" id="chromoAmt" oninput="document.getElementById('chromoDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
+        </div>
+        <div class="fx-slot" id="fxNoise" style="margin-top:5px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="noiseDot"></div><span>Grain / Bruit</span></div>
+          <input type="range" min="0" max="60" value="0" style="width:80px" id="noiseAmt" oninput="document.getElementById('noiseDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
+        </div>
+        <div class="fx-slot" id="fxScanlines" style="margin-top:5px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="slDot"></div><span>Scanlines</span></div>
+          <input type="range" min="0" max="100" value="0" style="width:80px" id="slAmt" oninput="document.getElementById('slDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
+        </div>
+        <div class="fx-slot" id="fxPixel" style="margin-top:5px">
+          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="pixDot"></div><span>Pixelisation</span></div>
+          <input type="range" min="1" max="40" value="1" style="width:80px" id="pixAmt" oninput="document.getElementById('pixDot').className='fx-dot'+(this.value>1?'':' off');applyFX()">
+        </div>
+      </div>
 
-<button onclick="applyText()">Appliquer texte</button>
-</div>
+      <div class="panel">
+        <h3>Particules & Overlays</h3>
+        <div class="grid2">
+          <button class="btn" onclick="toggleParticles()">✦ Particules</button>
+          <button class="btn" onclick="toggleSnow()">❄ Neige</button>
+          <button class="btn" onclick="toggleRain()">〰 Pluie</button>
+          <button class="btn" onclick="toggleFireworks()">★ Feux d'artifice</button>
+          <button class="btn" onclick="toggleLightning()">⚡ Éclair</button>
+          <button class="btn" onclick="clearOverlays()">✕ Effacer</button>
+        </div>
+      </div>
+    </div>
 
-<div class="panel">
-<h2>Importer image / logo</h2>
+    <!-- AUDIO -->
+    <div class="tab-panel" id="tab-audio">
+      <div class="panel">
+        <h3>Importer musique</h3>
+        <input type="file" id="musicLoader" accept="audio/*" style="font-size:12px;width:100%;color:var(--muted)">
+        <canvas id="waveformCanvas" style="margin-top:8px"></canvas>
+        <div id="audioBox" style="margin-top:8px"></div>
+        <label style="margin-top:8px">Volume master</label>
+        <input type="range" id="masterVol" min="0" max="100" value="80" oninput="setMasterVol(this.value)">
+        <label style="margin-top:8px">Fondu d'entrée (ms)</label>
+        <input type="range" id="fadeIn" min="0" max="5000" value="0" step="100">
+        <label>Fondu de sortie (ms)</label>
+        <input type="range" id="fadeOut" min="0" max="5000" value="0" step="100">
+        <div style="margin-top:10px">
+          <label>Analyseur audio</label>
+          <div id="vumeter"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Effets audio</h3>
+        <div class="fx-slot" style="margin-bottom:5px">
+          <span>Réverb</span>
+          <input type="range" id="reverbAmt" min="0" max="100" value="0" style="width:80px" oninput="updateAudioFX()">
+        </div>
+        <div class="fx-slot" style="margin-bottom:5px">
+          <span>Echo</span>
+          <input type="range" id="echoAmt" min="0" max="100" value="0" style="width:80px" oninput="updateAudioFX()">
+        </div>
+        <div class="fx-slot">
+          <span>Pitch</span>
+          <input type="range" id="pitchAmt" min="-12" max="12" value="0" style="width:80px" oninput="updateAudioFX()">
+        </div>
+        <h3 style="margin-top:12px">Égaliseur 5 bandes</h3>
+        <div style="display:flex;gap:6px;align-items:flex-end;height:80px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="80" oninput="updateEQ()">
+            <span style="font-size:10px;color:var(--muted)">80Hz</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="250" oninput="updateEQ()">
+            <span style="font-size:10px;color:var(--muted)">250Hz</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="1000" oninput="updateEQ()">
+            <span style="font-size:10px;color:var(--muted)">1kHz</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="4000" oninput="updateEQ()">
+            <span style="font-size:10px;color:var(--muted)">4kHz</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
+            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="16000" oninput="updateEQ()">
+            <span style="font-size:10px;color:var(--muted)">16kHz</span>
+          </div>
+        </div>
+      </div>
+    </div>
 
-<input type="file" id="imageLoader" accept="image/*">
+    <!-- KEYFRAMES -->
+    <div class="tab-panel" id="tab-kf">
+      <div class="panel">
+        <h3>Éditeur de keyframes</h3>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Temps: <span id="kfTime">0.00s</span></div>
+        <div id="kfList" style="display:flex;flex-direction:column;gap:2px"></div>
+        <button class="btn primary" style="width:100%;margin-top:8px" onclick="addKeyframe()">+ Ajouter keyframe au temps actuel</button>
+        <div id="kfTimeline" style="height:60px;background:#0a0a0a;border:1px solid var(--border);border-radius:6px;position:relative;margin-top:8px;overflow:hidden">
+          <canvas id="kfCanvas" style="width:100%;height:100%"></canvas>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Courbes d'interpolation</h3>
+        <select id="easingType">
+          <option value="linear">Linéaire</option>
+          <option value="easeIn">Ease In</option>
+          <option value="easeOut">Ease Out</option>
+          <option value="easeInOut">Ease In-Out</option>
+          <option value="bounce">Bounce</option>
+          <option value="elastic">Élastique</option>
+        </select>
+        <canvas id="curveCanvas" width="200" height="100" style="width:100%;margin-top:8px;border:1px solid var(--border);border-radius:6px;background:#0a0a0a"></canvas>
+      </div>
+    </div>
+  </div>
 
-<div class="small">
-PNG, JPG, logos transparents
-</div>
+  <!-- WORKSPACE -->
+  <div id="workspace">
+    <div id="previewWrap">
+      <div id="recBadge">● REC</div>
+      <span id="timecode">00:00:00</span>
+      <canvas id="canvas" width="1280" height="720"></canvas>
+    </div>
 
-<button onclick="spinImage()">Rotation</button>
-<button onclick="flashImage()">Clignotement</button>
-<button onclick="bounceImage()">Bounce</button>
-</div>
+    <!-- TIMELINE -->
+    <div id="timeline">
+      <div id="tl-header">
+        <span>Timeline</span>
+        <div style="flex:1"></div>
+        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="zoomTL(-1)">−</button>
+        <span id="tlZoomLabel" style="font-size:11px;color:var(--muted);min-width:30px;text-align:center">1×</span>
+        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="zoomTL(1)">+</button>
+        <span id="tlDuration" style="font-size:11px;color:var(--muted)">Durée: 30s</span>
+      </div>
+      <div id="tl-ruler"><canvas id="rulerCanvas" style="width:100%;height:20px"></canvas></div>
+      <div id="tracks-container">
+        <div class="track">
+          <div class="track-label">Vidéo</div>
+          <div class="track-lane" id="laneVideo">
+            <div class="clip video" style="left:0;width:200px" draggable="true">Scène 1</div>
+            <div class="clip video" style="left:210px;width:150px" draggable="true">Scène 2</div>
+          </div>
+        </div>
+        <div class="track">
+          <div class="track-label">Texte</div>
+          <div class="track-lane" id="laneText">
+            <div class="clip text" style="left:0;width:300px" draggable="true">Titre principal</div>
+          </div>
+        </div>
+        <div class="track">
+          <div class="track-label">FX</div>
+          <div class="track-lane" id="laneFX">
+            <div class="clip fx" style="left:190px;width:30px" draggable="true">Fade</div>
+          </div>
+        </div>
+        <div class="track">
+          <div class="track-label">Audio</div>
+          <div class="track-lane" id="laneAudio">
+            <div class="clip audio" style="left:0;width:400px" id="audioClip">Musique</div>
+          </div>
+        </div>
+      </div>
+      <div id="playhead" style="left:80px"></div>
+    </div>
 
-<div class="panel">
-<h2>Importer musique</h2>
-
-<input type="file" id="musicLoader" accept="audio/*">
-
-<div id="audioBox"></div>
-</div>
-
-<div class="panel">
-<h2>Transitions vidéo</h2>
-
-<select id="transitionType">
-<option>Fade</option>
-<option>Slide Left</option>
-<option>Zoom</option>
-<option>Flash</option>
-<option>Blur</option>
-</select>
-
-<button onclick="applyTransition()">Appliquer transition</button>
-</div>
-
-<div class="panel">
-<h2>Fond</h2>
-
-<input type="color" id="bgColor" value="#111111">
-
-<button onclick="changeBackground()">Changer fond</button>
-</div>
-
-<div class="panel">
-<h2>Médias importés</h2>
-
-<div id="mediaLibrary"></div>
-</div>
-
-</div>
-
-<div id="workspace">
-
-<div id="previewContainer">
-
-<div id="recordIndicator">● ENREGISTREMENT</div>
-
-<canvas id="canvas" width="1280" height="720"></canvas>
-
-</div>
-
-<div id="timeline">
-
-<div class="track" id="videoTrack">
-<strong>Piste Vidéo</strong>
-<div class="clip" draggable="true">Scène Intro</div>
-<div class="clip" draggable="true">Transition</div>
-</div>
-
-<div class="track" id="textTrack">
-<strong>Piste Texte</strong>
-<div class="clip" draggable="true">Titre TV</div>
-</div>
-
-<div class="track" id="audioTrack">
-<strong>Piste Audio</strong>
-<div class="clip" draggable="true">Musique</div>
-</div>
-
-</div>
-
-<div id="scenes">
-
-<div class="scene active" onclick="selectScene(this)">
-<span>Scène 1</span>
-</div>
-
-<div class="scene" onclick="selectScene(this)">
-<span>Scène 2</span>
-</div>
-
-<div class="scene" onclick="selectScene(this)">
-<span>Scène 3</span>
-</div>
-
-<div class="scene" onclick="addScene()">
-<span>+ Nouvelle scène</span>
-</div>
-
-</div>
-
-</div>
-
+    <!-- SCENES -->
+    <div id="scenes-bar">
+      <div class="scene-thumb active" id="scene-0" onclick="selectScene(0)">
+        <canvas width="110" height="62" id="thumb-0"></canvas>
+        <div class="scene-label">Scène 1</div>
+      </div>
+      <div class="scene-thumb" id="scene-1" onclick="selectScene(1)">
+        <canvas width="110" height="62" id="thumb-1"></canvas>
+        <div class="scene-label">Scène 2</div>
+      </div>
+      <div class="scene-thumb add-scene" onclick="addScene()">
+        <div style="font-size:20px;color:var(--muted)">+</div>
+        <div class="scene-label">Nouvelle scène</div>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
+// ============================================================
+// STATE
+// ============================================================
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
 
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
-
-let bgColor = "#111111";
-let text = "Bienvenue sur NovaMotion Ultimate";
-let fontSize = 60;
-let textColor = "#ffffff";
-
-let imageObj = null;
-let imageAngle = 0;
-let imageVisible = true;
-let bounceY = 0;
-
-let mediaRecorder;
-let chunks = [];
-
-let textX = 120;
-let textY = 140;
-
-function draw(){
-
-ctx.clearRect(0,0,canvas.width,canvas.height);
-
-ctx.fillStyle = bgColor;
-ctx.fillRect(0,0,canvas.width,canvas.height);
-
-ctx.fillStyle = textColor;
-ctx.font = fontSize + "px Arial";
-ctx.fillText(text,textX,textY);
-
-if(imageObj && imageVisible){
-
-ctx.save();
-
-ctx.translate(980,260+bounceY);
-ctx.rotate(imageAngle);
-
-ctx.drawImage(imageObj,-120,-120,240,240);
-
-ctx.restore();
-
-}
-
-requestAnimationFrame(draw);
-
-}
-
-draw();
-
-function applyText(){
-
-text = document.getElementById("textInput").value;
-fontSize = document.getElementById("fontSize").value;
-textColor = document.getElementById("textColor").value;
-
-}
-
-function changeBackground(){
-
-bgColor = document.getElementById("bgColor").value;
-
-}
-
-document.getElementById("imageLoader").addEventListener("change",function(e){
-
-const file = e.target.files[0];
-
-if(!file)return;
-
-const reader = new FileReader();
-
-reader.onload = function(event){
-
-imageObj = new Image();
-imageObj.src = event.target.result;
-
+let state = {
+  playing: false, recording: false,
+  time: 0, duration: 30,
+  fps: 60, lastTime: 0, actualFPS: 0, fpsCount: 0, fpsTimer: 0,
+  currentScene: 0,
+  bgType: 'solid', bgColor: '#111111',
+  grad: { c1:'#0a0a2e',c2:'#1a0533',c3:'#000f33', p1:0,p2:50,p3:100, angle:135 },
+  patternType: 'grid', patternColor: '#1a2a1a',
+  bgAnimType: 'particles',
+  layers: [],
+  activeLayer: null,
+  img: { obj:null, x:640, y:360, scale:100, rot:0, opacity:100,
+         animSpin:false, spinSpeed:0,
+         animBounce:false, bounceY:0, bounceDir:1,
+         animPulse:false, pulsePhase:0,
+         animFloat:false, floatPhase:0,
+         animShake:false, shakeX:0,
+         animFlash:false, flashVisible:true },
+  fx: { brightness:0, contrast:0, saturation:0, vignette:0, chromo:0, noise:0, scanlines:0, pixelSize:1 },
+  particles: [], snowflakes: [], raindrops: [], fireworks: [], lightnings: [],
+  showParticles:false, showSnow:false, showRain:false, showFireworks:false, showLightning:false,
+  transition: { active:false, type:'Fade', progress:0, duration:800 },
+  textLayers: [],
+  keyframes: [],
+  tlZoom: 1,
+  audioCtx: null, analyser: null, gainNode: null, sourceNode: null, audioBuffer: null,
+  reverbNode: null, delayNode: null,
+  eqBands: [],
+  scenes: [{ name:'Scène 1' }, { name:'Scène 2' }],
+  animFrame: 0,
+  mediaRecorder: null, chunks: [],
+  textAnimFrame: 0,
+  glitchOffset: 0,
 };
 
-reader.readAsDataURL(file);
-
-addMedia("🖼️ " + file.name);
-
+// Init default text layer
+state.textLayers.push({
+  text: 'Bienvenue sur NovaMotion',
+  font: 'Arial', size: 60, color: '#ffffff', opacity: 100,
+  x: 80, y: 100, shadow: '#000000', shadowBlur: 6,
+  anim: 'none', animPhase: 0
 });
 
-document.getElementById("musicLoader").addEventListener("change",function(e){
-
-const file = e.target.files[0];
-
-if(!file)return;
-
-const url = URL.createObjectURL(file);
-
-const audio = document.createElement("audio");
-
-audio.controls = true;
-audio.src = url;
-
-document.getElementById("audioBox").innerHTML = "";
-document.getElementById("audioBox").appendChild(audio);
-
-addMedia("🎵 " + file.name);
-
-});
-
-function addMedia(name){
-
-const div = document.createElement("div");
-
-div.className = "mediaItem";
-div.innerHTML = name;
-
-document.getElementById("mediaLibrary").appendChild(div);
-
+// ============================================================
+// TABS
+// ============================================================
+function showTab(id) {
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', t.onclick.toString().includes("'"+id+"'")));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
 }
 
-function playScene(){
+// ============================================================
+// CANVAS DRAW LOOP
+// ============================================================
+function drawFrame(ts) {
+  // FPS
+  state.fpsCount++;
+  if(ts - state.fpsTimer >= 1000) {
+    state.actualFPS = state.fpsCount;
+    state.fpsCount = 0; state.fpsTimer = ts;
+    document.getElementById('fpsDisplay').textContent = state.actualFPS+' fps';
+  }
+  if(state.playing) {
+    const dt = Math.min((ts - state.lastTime)/1000, .1);
+    state.time = Math.min(state.time + dt, state.duration);
+    if(state.time >= state.duration) { state.time = 0; }
+    updateTimecode();
+    updatePlayhead();
+  }
+  state.lastTime = ts;
+  state.animFrame++;
 
-let steps = 0;
-
-const anim = setInterval(()=>{
-
-textX += 4;
-imageAngle += 0.03;
-
-steps++;
-
-if(steps > 180){
-
-clearInterval(anim);
-
-textX = 120;
-
+  drawBackground();
+  drawOverlays();
+  applyFXLayer();
+  drawImages();
+  drawTextLayers();
+  updateParticles();
+  drawTransition();
+  requestAnimationFrame(drawFrame);
 }
 
-},16);
-
+// ============================================================
+// BACKGROUND
+// ============================================================
+function drawBackground() {
+  const t = state.animFrame;
+  switch(state.bgType) {
+    case 'solid':
+      ctx.fillStyle = state.bgColor;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      break;
+    case 'gradient':
+      const angle = (state.grad.angle * Math.PI/180);
+      const cx2 = canvas.width/2, cy2=canvas.height/2;
+      const len = Math.sqrt(canvas.width**2+canvas.height**2)/2;
+      const grd = ctx.createLinearGradient(
+        cx2 - Math.cos(angle)*len, cy2 - Math.sin(angle)*len,
+        cx2 + Math.cos(angle)*len, cy2 + Math.sin(angle)*len
+      );
+      grd.addColorStop(state.grad.p1/100, state.grad.c1);
+      grd.addColorStop(state.grad.p2/100, state.grad.c2);
+      grd.addColorStop(state.grad.p3/100, state.grad.c3);
+      ctx.fillStyle = grd;
+      ctx.fillRect(0,0,canvas.width,canvas.height);
+      break;
+    case 'pattern':
+      drawPattern();
+      break;
+    case 'animated':
+      drawAnimatedBg(t);
+      break;
+  }
 }
 
-function spinImage(){
-
-let count = 0;
-
-const spin = setInterval(()=>{
-
-imageAngle += 0.2;
-
-count++;
-
-if(count > 80){
-clearInterval(spin);
+function drawPattern() {
+  ctx.fillStyle = '#0a0a0a';
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.strokeStyle = state.patternColor;
+  ctx.lineWidth = 1;
+  const W=canvas.width, H=canvas.height;
+  switch(state.patternType) {
+    case 'grid':
+      for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
+      for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
+      break;
+    case 'dots':
+      ctx.fillStyle = state.patternColor;
+      for(let x=20;x<W;x+=40)for(let y=20;y<H;y+=40){ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill()}
+      break;
+    case 'hex':
+      const r=30, h=r*Math.sqrt(3);
+      for(let row=0;row<H/h+1;row++)for(let col=0;col<W/(r*3)+1;col++){
+        const px=col*r*3+(row%2)*r*1.5, py=row*h;
+        drawHex(px,py,r);
+      }
+      break;
+    case 'stripes':
+      for(let x=-H;x<W+H;x+=40){
+        ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+H,H);ctx.stroke();
+      }
+      break;
+  }
 }
 
-},16);
-
+function drawHex(x,y,r){
+  ctx.beginPath();
+  for(let i=0;i<6;i++){
+    const a=i*Math.PI/3;
+    ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
+  }
+  ctx.closePath();ctx.stroke();
 }
 
-function flashImage(){
-
-let flashes = 0;
-
-const flash = setInterval(()=>{
-
-imageVisible = !imageVisible;
-
-flashes++;
-
-if(flashes > 12){
-
-imageVisible = true;
-clearInterval(flash);
-
+function drawAnimatedBg(t) {
+  const W=canvas.width, H=canvas.height;
+  ctx.fillStyle='#050510'; ctx.fillRect(0,0,W,H);
+  switch(state.bgAnimType) {
+    case 'particles':
+      // managed via particle system
+      ctx.fillStyle='#050510'; ctx.fillRect(0,0,W,H);
+      break;
+    case 'waves':
+      for(let i=0;i<6;i++){
+        ctx.beginPath();
+        ctx.strokeStyle = `hsla(${220+i*20},70%,50%,${0.15-i*0.02})`;
+        ctx.lineWidth = 2;
+        for(let x=0;x<=W;x+=4){
+          const y2 = H/2 + Math.sin(x/120+t*0.02+i*0.5)*((i+1)*25);
+          x===0?ctx.moveTo(x,y2):ctx.lineTo(x,y2);
+        }
+        ctx.stroke();
+      }
+      break;
+    case 'matrix':
+      ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle='#0f0'; ctx.font='14px monospace';
+      if(!state.matrixCols){
+        state.matrixCols=[];
+        for(let x=0;x<W/14;x++) state.matrixCols.push(Math.random()*H);
+      }
+      if(t%3===0){
+        state.matrixCols.forEach((y,i)=>{
+          const ch=String.fromCharCode(0x30A0+Math.random()*96);
+          ctx.fillText(ch,i*14,y);
+          state.matrixCols[i]=(y>H+20)?0:y+14;
+        });
+      }
+      break;
+    case 'aurora':
+      for(let i=0;i<4;i++){
+        const grd=ctx.createLinearGradient(0,H*0.2,0,H*0.8);
+        grd.addColorStop(0,'transparent');
+        grd.addColorStop(0.5,`hsla(${140+i*30},100%,50%,${0.15+0.05*Math.sin(t*0.01+i)})`);
+        grd.addColorStop(1,'transparent');
+        ctx.save();
+        ctx.translate(0,Math.sin(t*0.008+i*1.5)*40);
+        ctx.fillStyle=grd;
+        ctx.fillRect(0,0,W,H);
+        ctx.restore();
+      }
+      break;
+    case 'plasma':
+      const id=ctx.getImageData(0,0,W,H);
+      const d=id.data;
+      for(let py=0;py<H;py+=4)for(let px=0;px<W;px+=4){
+        const v=Math.sin(px/60+t*0.02)+Math.sin(py/40)+Math.sin((px+py)/80+t*0.015)+Math.sin(Math.sqrt(px*px+py*py)/50);
+        const hue=(v+3)/6;
+        const [r2,g2,b2]=hslToRgb(hue,.9,.5);
+        for(let dy=0;dy<4;dy++)for(let dx=0;dx<4;dx++){
+          const idx=((py+dy)*W+(px+dx))*4;
+          d[idx]=r2;d[idx+1]=g2;d[idx+2]=b2;d[idx+3]=255;
+        }
+      }
+      ctx.putImageData(id,0,0);
+      break;
+  }
 }
 
-},120);
+function hslToRgb(h,s,l){
+  let r,g,b;
+  if(s===0){r=g=b=l}else{
+    const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;
+    r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);
+  }
+  return[Math.round(r*255),Math.round(g*255),Math.round(b*255)];
+}
+function hue2rgb(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p}
 
+// ============================================================
+// TEXT LAYERS
+// ============================================================
+function drawTextLayers() {
+  const t = state.animFrame;
+  state.textLayers.forEach(layer => {
+    ctx.save();
+    ctx.globalAlpha = layer.opacity/100;
+    ctx.shadowColor = layer.shadow;
+    ctx.shadowBlur = layer.shadowBlur;
+    ctx.font = `${layer.size}px ${layer.font}`;
+    ctx.textBaseline = 'top';
+    drawAnimatedText(layer, t);
+    ctx.restore();
+  });
 }
 
-function bounceImage(){
+function drawAnimatedText(layer, t) {
+  const chars = layer.text.split('');
+  layer.animPhase = (layer.animPhase||0) + 1;
+  const ph = layer.animPhase;
+  let x = layer.x, y = layer.y;
 
-let dir = 1;
+  switch(layer.anim) {
+    case 'none':
+      ctx.fillStyle = layer.color;
+      ctx.fillText(layer.text, x, y);
+      break;
 
-const bounce = setInterval(()=>{
+    case 'typewriter':
+      const visCount = Math.floor(ph/3) % (chars.length+1);
+      ctx.fillStyle = layer.color;
+      ctx.fillText(layer.text.slice(0,visCount), x, y);
+      if(Math.floor(ph/20)%2===0){
+        ctx.fillText('|', x + ctx.measureText(layer.text.slice(0,visCount)).width+2, y);
+      }
+      break;
 
-bounceY += dir*4;
+    case 'glitch':
+      for(let i=0;i<3;i++){
+        ctx.fillStyle = i===0?'rgba(255,0,0,.7)':i===1?'rgba(0,255,255,.7)':layer.color;
+        const ox = i===0?Math.sin(ph*0.3)*8:i===1?Math.cos(ph*0.4)*-6:0;
+        const oy = i===0?Math.cos(ph*0.2)*2:0;
+        ctx.fillText(layer.text, x+ox, y+oy);
+      }
+      if(ph%20<5){
+        const gx=x, gw=ctx.measureText(layer.text).width;
+        const gy=y+Math.random()*layer.size;
+        ctx.fillStyle='rgba(255,255,255,.4)';
+        ctx.fillRect(gx, gy, gw, 2+Math.random()*4);
+      }
+      break;
 
-if(bounceY > 40) dir=-1;
-if(bounceY < -40) dir=1;
+    case 'wave':
+      chars.forEach((ch,i)=>{
+        const cy = y + Math.sin(ph*0.05+i*0.4)*12;
+        ctx.fillStyle = layer.color;
+        const prevT = chars.slice(0,i).join('');
+        ctx.fillText(ch, x+ctx.measureText(prevT).width, cy);
+      });
+      break;
 
-},16);
+    case 'bounce':
+      const by = y + Math.abs(Math.sin(ph*0.08))*-20;
+      ctx.fillStyle = layer.color;
+      ctx.fillText(layer.text, x, by);
+      break;
 
-setTimeout(()=>{
-clearInterval(bounce);
-bounceY = 0;
-},4000);
+    case 'fade':
+      const fa = Math.min(ph/60, 1);
+      ctx.globalAlpha = fa * (layer.opacity/100);
+      ctx.fillStyle = layer.color;
+      ctx.fillText(layer.text, x, y);
+      break;
 
+    case 'slide':
+      const sx = x - Math.max(0,(200-ph)*3);
+      ctx.fillStyle = layer.color;
+      ctx.fillText(layer.text, sx, y);
+      break;
+
+    case 'neon':
+      const neonC = layer.color;
+      for(let r=6;r>=0;r--){
+        ctx.shadowColor = neonC;
+        ctx.shadowBlur = r*5;
+        ctx.fillStyle = r===0?neonC:`rgba(255,255,255,${.05*(6-r)})`;
+        ctx.fillText(layer.text, x, y);
+      }
+      break;
+
+    case 'rainbow':
+      chars.forEach((ch,i)=>{
+        const hue=(i/chars.length*360+ph*2)%360;
+        ctx.fillStyle=`hsl(${hue},100%,60%)`;
+        const prevT=chars.slice(0,i).join('');
+        ctx.fillText(ch, x+ctx.measureText(prevT).width, y);
+      });
+      break;
+
+    case 'explode':
+      chars.forEach((ch,i)=>{
+        const delay=i*8;
+        const progress=Math.max(0,ph-delay);
+        const scale=Math.min(1,progress/20);
+        const alpha=Math.min(1,progress/30);
+        const fromX=canvas.width/2, fromY=canvas.height/2;
+        const toX=x+ctx.measureText(chars.slice(0,i).join('')).width;
+        const curX=fromX+(toX-fromX)*scale;
+        const curY=fromY+(y-fromY)*scale;
+        ctx.save();
+        ctx.globalAlpha=alpha*(layer.opacity/100);
+        ctx.fillStyle=layer.color;
+        ctx.fillText(ch,curX,curY);
+        ctx.restore();
+      });
+      break;
+  }
+}
+
+// ============================================================
+// IMAGE
+// ============================================================
+function drawImages() {
+  const img = state.img;
+  if(!img.obj) return;
+  const t = state.animFrame;
+
+  if(img.animSpin) img.rot += img.spinSpeed;
+  if(img.animBounce){
+    img.bounceY += img.bounceDir*3;
+    if(img.bounceY>40||img.bounceY<-40) img.bounceDir*=-1;
+  }
+  if(img.animPulse){
+    img.pulsePhase += .06;
+    img.scale += Math.sin(img.pulsePhase)*0.5;
+  }
+  if(img.animFloat){
+    img.floatPhase += .025;
+    img.y += Math.sin(img.floatPhase)*0.5;
+  }
+  if(img.animShake){
+    img.shakeX = (Math.random()-.5)*10;
+  }
+  if(img.animFlash && t%8===0) img.flashVisible=!img.flashVisible;
+
+  if(!img.animFlash||img.flashVisible){
+    ctx.save();
+    ctx.globalAlpha = img.opacity/100;
+    ctx.translate(img.x + (img.shakeX||0), img.y + (img.bounceY||0));
+    ctx.rotate(img.rot * Math.PI/180);
+    const s = (img.scale||100)/100;
+    const w=img.obj.width*s, h=img.obj.height*s;
+    ctx.drawImage(img.obj, -w/2, -h/2, w, h);
+    ctx.restore();
+  }
+}
+
+// ============================================================
+// PARTICLES & OVERLAYS
+// ============================================================
+function updateParticles() {
+  const W=canvas.width, H=canvas.height, t=state.animFrame;
+
+  if(state.showParticles) {
+    if(state.particles.length<120){
+      state.particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*1.2,vy:(Math.random()-.5)*1.2,r:Math.random()*3+1,hue:Math.random()*360,life:1});
+    }
+    state.particles.forEach((p,i)=>{
+      p.x+=p.vx; p.y+=p.vy; p.life-=.003;
+      if(p.x<0||p.x>W||p.y<0||p.y>H||p.life<=0){
+        state.particles.splice(i,1); return;
+      }
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${p.hue},100%,70%,${p.life})`;
+      ctx.fill();
+      // connect nearby
+      state.particles.forEach(p2=>{
+        const dx=p.x-p2.x,dy=p.y-p2.y,d=Math.sqrt(dx*dx+dy*dy);
+        if(d<80){
+          ctx.beginPath();
+          ctx.strokeStyle=`hsla(${p.hue},100%,70%,${(1-d/80)*p.life*.3})`;
+          ctx.lineWidth=.5;
+          ctx.moveTo(p.x,p.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+        }
+      });
+    });
+  }
+
+  if(state.showSnow) {
+    if(state.snowflakes.length<200){
+      state.snowflakes.push({x:Math.random()*W,y:-5,size:Math.random()*4+1,speed:Math.random()*1.5+0.5,drift:Math.random()*.5-.25});
+    }
+    state.snowflakes.forEach((s,i)=>{
+      s.y+=s.speed; s.x+=s.drift;
+      if(s.y>H+10){state.snowflakes.splice(i,1);return;}
+      ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,255,255,.8)';ctx.fill();
+    });
+  }
+
+  if(state.showRain) {
+    ctx.fillStyle='rgba(0,0,20,.05)';
+    ctx.fillRect(0,0,W,H);
+    if(state.raindrops.length<300){
+      state.raindrops.push({x:Math.random()*W,y:-10,speed:Math.random()*8+6,len:Math.random()*15+10});
+    }
+    ctx.strokeStyle='rgba(130,180,255,.4)';ctx.lineWidth=1;
+    state.raindrops.forEach((r,i)=>{
+      r.y+=r.speed;
+      if(r.y>H+20){state.raindrops.splice(i,1);return;}
+      ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.len*.3,r.y+r.len);ctx.stroke();
+    });
+  }
+
+  if(state.showFireworks && t%30===0) {
+    const fx={x:Math.random()*W,y:Math.random()*H*.6,particles:[],hue:Math.random()*360};
+    for(let i=0;i<40;i++){
+      const a=Math.random()*Math.PI*2, sp=Math.random()*5+2;
+      fx.particles.push({x:fx.x,y:fx.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1});
+    }
+    state.fireworks.push(fx);
+  }
+  state.fireworks.forEach((fw,fi)=>{
+    fw.particles.forEach((p,i)=>{
+      p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.vx*=.97;p.life-=.018;
+      if(p.life<=0){fw.particles.splice(i,1);return;}
+      ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);
+      ctx.fillStyle=`hsla(${fw.hue},100%,70%,${p.life})`;ctx.fill();
+    });
+    if(fw.particles.length===0)state.fireworks.splice(fi,1);
+  });
+
+  if(state.showLightning && t%90<5) {
+    drawLightning(Math.random()*W, 0, Math.random()*W, H, 6);
+  }
+}
+
+function drawLightning(x1,y1,x2,y2,roughness){
+  if(Math.abs(x2-x1)+Math.abs(y2-y1)<10){
+    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
+    ctx.strokeStyle='rgba(200,200,255,.9)';ctx.lineWidth=2;ctx.stroke();
+    return;
+  }
+  const mx=(x1+x2)/2+(Math.random()-.5)*roughness*2;
+  const my=(y1+y2)/2+(Math.random()-.5)*roughness;
+  drawLightning(x1,y1,mx,my,roughness*.6);
+  drawLightning(mx,my,x2,y2,roughness*.6);
+  if(Math.random()<.3) drawLightning(mx,my,mx+(Math.random()-.5)*100,my+Math.random()*80,roughness*.4);
+}
+
+// ============================================================
+// POST-PROCESSING FX
+// ============================================================
+function applyFXLayer() {
+  const fx = state.fx;
+  const W=canvas.width, H=canvas.height;
+  const {brightness,contrast,saturation,vignette,chromo,noise,scanlines,pixelSize} = fx;
+
+  if(brightness===0&&contrast===0&&saturation===0&&vignette===0&&chromo===0&&noise===0&&scanlines===0&&pixelSize===1) return;
+
+  // Pixelisation first (on entire scene)
+  if(pixelSize>1){
+    const ps=Math.round(pixelSize);
+    ctx.save();
+    ctx.imageSmoothingEnabled=false;
+    const tmp=document.createElement('canvas');
+    tmp.width=Math.ceil(W/ps);tmp.height=Math.ceil(H/ps);
+    tmp.getContext('2d').drawImage(canvas,0,0,tmp.width,tmp.height);
+    ctx.drawImage(tmp,0,0,W,H);
+    ctx.restore();
+    return; // skip pixel ops after
+  }
+
+  const id=ctx.getImageData(0,0,W,H), d=id.data;
+  const bFactor=brightness/100;
+  const cFactor=(100+contrast)/100;
+  const sFactor=(100+saturation)/100;
+  const noiseAmt=noise/100*40;
+
+  for(let i=0;i<d.length;i+=4){
+    let r=d[i],g=d[i+1],b=d[i+2];
+    // brightness
+    r+=bFactor*128; g+=bFactor*128; b+=bFactor*128;
+    // contrast
+    r=(r-128)*cFactor+128; g=(g-128)*cFactor+128; b=(b-128)*cFactor+128;
+    // saturation
+    const grey=r*.3+g*.59+b*.11;
+    r=grey+(r-grey)*sFactor; g=grey+(g-grey)*sFactor; b=grey+(b-grey)*sFactor;
+    // noise
+    if(noiseAmt>0){const n=(Math.random()-.5)*noiseAmt;r+=n;g+=n;b+=n;}
+    d[i]=Math.max(0,Math.min(255,r));
+    d[i+1]=Math.max(0,Math.min(255,g));
+    d[i+2]=Math.max(0,Math.min(255,b));
+  }
+  ctx.putImageData(id,0,0);
+
+  // Chromatic aberration
+  if(chromo>0){
+    const ca=chromo;
+    ctx.save();
+    ctx.globalCompositeOperation='screen';
+    ctx.globalAlpha=.3;
+    ctx.drawImage(canvas,ca,0,W,H,0,0,W,H);
+    ctx.drawImage(canvas,-ca,0,W,H,0,0,W,H);
+    ctx.restore();
+  }
+
+  // Vignette
+  if(vignette>0){
+    const grd=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.8);
+    grd.addColorStop(0,'transparent');
+    grd.addColorStop(1,`rgba(0,0,0,${vignette/100})`);
+    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
+  }
+
+  // Scanlines
+  if(scanlines>0){
+    const alpha=scanlines/200;
+    for(let y=0;y<H;y+=2){
+      ctx.fillStyle=`rgba(0,0,0,${alpha})`;
+      ctx.fillRect(0,y,W,1);
+    }
+  }
+}
+
+// ============================================================
+// TRANSITIONS
+// ============================================================
+function drawTransition() {
+  if(!state.transition.active) return;
+  const tr = state.transition;
+  const W=canvas.width, H=canvas.height;
+  tr.progress += 16/tr.duration;
+  if(tr.progress>=1){tr.active=false;ctx.globalAlpha=1;canvas.style.filter='';return;}
+  const p=tr.progress;
+
+  switch(tr.type){
+    case 'Fade':
+      ctx.fillStyle=`rgba(0,0,0,${Math.sin(p*Math.PI)})`;
+      ctx.fillRect(0,0,W,H);
+      break;
+    case 'Slide Left':
+      ctx.fillStyle='#000';
+      ctx.fillRect(W-p*W*2,0,W,H);
+      break;
+    case 'Slide Right':
+      ctx.fillStyle='#000';
+      ctx.fillRect(p*W*2-W,0,W,H);
+      break;
+    case 'Zoom In':
+      ctx.save();ctx.scale(1+p*.5,1+p*.5);ctx.restore();
+      ctx.fillStyle=`rgba(0,0,0,${p})`;ctx.fillRect(0,0,W,H);
+      break;
+    case 'Flash':
+      canvas.style.opacity=(Math.floor(p*10)%2===0)?'1':'0';
+      if(p>.9)canvas.style.opacity='1';
+      break;
+    case 'Blur':
+      canvas.style.filter=`blur(${Math.sin(p*Math.PI)*12}px)`;
+      break;
+    case 'Wipe':
+      ctx.fillStyle='#000';ctx.fillRect(0,0,W*p*2,H);
+      break;
+    case 'Pixel Dissolve':
+      if(p<.5){
+        for(let i=0;i<100;i++){
+          ctx.fillStyle=`rgba(0,0,0,${p*2})`;
+          ctx.fillRect(Math.random()*W,Math.random()*H,20+Math.random()*40,20+Math.random()*40);
+        }
+      }
+      break;
+    case 'Spiral':
+      ctx.save();ctx.translate(W/2,H/2);ctx.rotate(p*Math.PI*4);ctx.scale(p,p);
+      ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(-W/2,-H/2,W,H);
+      ctx.restore();
+      break;
+  }
+}
+
+// ============================================================
+// OVERLAY TOGGLES
+// ============================================================
+function toggleParticles(){state.showParticles=!state.showParticles}
+function toggleSnow(){state.showSnow=!state.showSnow;if(!state.showSnow)state.snowflakes=[]}
+function toggleRain(){state.showRain=!state.showRain;if(!state.showRain)state.raindrops=[]}
+function toggleFireworks(){state.showFireworks=!state.showFireworks}
+function toggleLightning(){state.showLightning=!state.showLightning}
+function clearOverlays(){
+  state.showParticles=state.showSnow=state.showRain=state.showFireworks=state.showLightning=false;
+  state.particles=[];state.snowflakes=[];state.raindrops=[];state.fireworks=[];
+}
+
+// ============================================================
+// CONTROLS
+// ============================================================
+function applyText() {
+  const layer = state.textLayers[0]||{};
+  layer.text = document.getElementById('textInput').value;
+  layer.font = document.getElementById('fontFamily').value;
+  layer.size = +document.getElementById('fontSize').value;
+  layer.color = document.getElementById('textColor').value;
+  layer.shadow = document.getElementById('shadowColor').value;
+  layer.shadowBlur = +document.getElementById('shadowBlur').value;
+  layer.opacity = +document.getElementById('textOpacity').value;
+  layer.x = +document.getElementById('textX').value;
+  layer.y = +document.getElementById('textY').value;
+  layer.anim = document.getElementById('textAnim').value;
+  layer.animPhase = 0;
+  state.textLayers[0] = layer;
+}
+
+function syncText(){applyText()}
+
+function addTextLayer(){
+  state.textLayers.push({
+    text:'Nouveau texte', font:'Arial', size:40, color:'#ffffff',
+    opacity:100, x:80, y:200+state.textLayers.length*80,
+    shadow:'#000', shadowBlur:4, anim:'none', animPhase:0
+  });
+}
+
+function applyBackground() {
+  const bgType = document.getElementById('bgType').value;
+  state.bgType = bgType;
+  state.bgColor = document.getElementById('bgColor').value;
+  state.grad = {
+    c1:document.getElementById('grad1').value,
+    c2:document.getElementById('grad2').value,
+    c3:document.getElementById('grad3').value,
+    p1:+document.getElementById('grad1p').value,
+    p2:+document.getElementById('grad2p').value,
+    p3:+document.getElementById('grad3p').value,
+    angle:+document.getElementById('gradAngle').value
+  };
+  state.patternType = document.getElementById('patternType').value;
+  state.patternColor = document.getElementById('patternColor').value;
+  state.bgAnimType = document.getElementById('bgAnimType').value;
+  state.matrixCols = null;
+}
+
+function updateBgType(){
+  const t=document.getElementById('bgType').value;
+  document.getElementById('bgSolid').style.display=t==='solid'?'block':'none';
+  document.getElementById('bgGradient').style.display=t==='gradient'?'block':'none';
+  document.getElementById('bgPattern').style.display=t==='pattern'?'block':'none';
+  document.getElementById('bgAnimated').style.display=t==='animated'?'block':'none';
+}
+
+function changeResolution(val){
+  const [w,h]=val.split(',').map(Number);
+  canvas.width=w; canvas.height=h;
+  document.getElementById('textX').max=w;
+  document.getElementById('textY').max=h;
+  document.getElementById('imgX').max=w;
+  document.getElementById('imgY').max=h;
+}
+
+function applyFX(){
+  const slots=document.querySelectorAll('.fx-slot input[type=range]');
+  state.fx.brightness=+slots[0].value;
+  state.fx.contrast=+slots[1].value;
+  state.fx.saturation=+slots[2].value;
+  state.fx.vignette=+document.getElementById('vigAmt').value;
+  state.fx.chromo=+document.getElementById('chromoAmt').value;
+  state.fx.noise=+document.getElementById('noiseAmt').value;
+  state.fx.scanlines=+document.getElementById('slAmt').value;
+  state.fx.pixelSize=+document.getElementById('pixAmt').value;
 }
 
 function applyTransition(){
-
-const type = document.getElementById("transitionType").value;
-
-if(type === "Fade") fadeTransition();
-if(type === "Slide Left") slideTransition();
-if(type === "Zoom") zoomTransition();
-if(type === "Flash") flashTransition();
-if(type === "Blur") blurTransition();
-
+  state.transition.active=true;
+  state.transition.progress=0;
+  state.transition.type=document.getElementById('transitionType').value;
+  state.transition.duration=+document.getElementById('transDuration').value;
 }
 
-function fadeTransition(){
-
-let alpha = 1;
-
-const fade = setInterval(()=>{
-
-ctx.globalAlpha = alpha;
-alpha -= 0.02;
-
-if(alpha <= 0){
-
-ctx.globalAlpha = 1;
-clearInterval(fade);
-
-}
-
-},16);
-
-}
-
-function slideTransition(){
-
-let x = -1280;
-
-const slide = setInterval(()=>{
-
-ctx.fillStyle = "#000";
-ctx.fillRect(x,0,1280,720);
-
-x += 40;
-
-if(x > 1280){
-clearInterval(slide);
-}
-
-},16);
-
-}
-
-function zoomTransition(){
-
-let zoom = 1;
-
-const z = setInterval(()=>{
-
-ctx.save();
-
-ctx.scale(zoom,zoom);
-
-zoom += 0.01;
-
-ctx.restore();
-
-if(zoom > 1.8){
-clearInterval(z);
-}
-
-},16);
-
-}
-
-function flashTransition(){
-
-let flashes = 0;
-
-const fl = setInterval(()=>{
-
-canvas.style.opacity = canvas.style.opacity == 0 ? 1 : 0;
-
-flashes++;
-
-if(flashes > 10){
-
-canvas.style.opacity = 1;
-clearInterval(fl);
-
-}
-
-},100);
-
-}
-
-function blurTransition(){
-
-canvas.style.filter = "blur(12px)";
-
-setTimeout(()=>{
-canvas.style.filter = "blur(0px)";
-},1200);
-
-}
-
-function exportFrame(){
-
-const link = document.createElement("a");
-
-link.download = "frame.png";
-
-link.href = canvas.toDataURL();
-
-link.click();
-
-}
-
-function startRecording(){
-
-document.getElementById("recordIndicator").style.display = "block";
-
-const stream = canvas.captureStream(30);
-
-mediaRecorder = new MediaRecorder(stream,{
-mimeType:"video/webm"
+// ============================================================
+// IMAGE IMPORT & ANIMATIONS
+// ============================================================
+document.getElementById('imageLoader').addEventListener('change',function(e){
+  const file=e.target.files[0]; if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    const img=new Image();
+    img.onload=()=>{state.img.obj=img};
+    img.src=ev.target.result;
+  };
+  reader.readAsDataURL(file);
+  addMedia('🖼️',file.name);
 });
 
-chunks = [];
-
-mediaRecorder.ondataavailable = e=>{
-
-if(e.data.size > 0){
-chunks.push(e.data);
+function syncImg(){
+  state.img.x=+document.getElementById('imgX').value;
+  state.img.y=+document.getElementById('imgY').value;
+  state.img.scale=+document.getElementById('imgScale').value;
+  state.img.rot=+document.getElementById('imgRot').value;
+  state.img.opacity=+document.getElementById('imgOpacity').value;
 }
 
-};
+function spinImage(){
+  state.img.animSpin=!state.img.animSpin;
+  state.img.spinSpeed = state.img.animSpin?2:0;
+}
+function flashImage(){state.img.animFlash=!state.img.animFlash;if(!state.img.animFlash)state.img.flashVisible=true}
+function bounceImage(){state.img.animBounce=!state.img.animBounce;if(!state.img.animBounce)state.img.bounceY=0}
+function pulseImage(){state.img.animPulse=!state.img.animPulse}
+function shakeImage(){state.img.animShake=!state.img.animShake;if(!state.img.animShake)state.img.shakeX=0}
+function floatImage(){state.img.animFloat=!state.img.animFloat}
 
-mediaRecorder.onstop = ()=>{
+// ============================================================
+// AUDIO ENGINE
+// ============================================================
+document.getElementById('musicLoader').addEventListener('change',async function(e){
+  const file=e.target.files[0]; if(!file)return;
+  addMedia('🎵',file.name);
 
-document.getElementById("recordIndicator").style.display = "none";
+  if(!state.audioCtx) initAudioContext();
 
-const blob = new Blob(chunks,{
-type:"video/webm"
+  const arrayBuffer = await file.arrayBuffer();
+  state.audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
+
+  // Waveform display
+  drawWaveform(state.audioBuffer);
+
+  // Setup playback with gain
+  connectAudioGraph();
+
+  // Also show classic audio element for sync
+  const url = URL.createObjectURL(file);
+  const audio = document.createElement('audio');
+  audio.controls=true; audio.src=url; audio.id='audioElement';
+  audio.style.width='100%'; audio.style.marginTop='8px';
+  const box=document.getElementById('audioBox');
+  box.innerHTML='';box.appendChild(audio);
+  state.audioElement = audio;
+
+  // Sync audio play/pause with timeline
+  document.getElementById('playBtn').textContent='▶ Lecture';
+  state.playing=false;
 });
 
-const url = URL.createObjectURL(blob);
+function initAudioContext(){
+  state.audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  state.analyser=state.audioCtx.createAnalyser();
+  state.analyser.fftSize=128;
+  state.gainNode=state.audioCtx.createGain();
+  state.gainNode.gain.value=0.8;
+  // EQ setup
+  const freqs=[80,250,1000,4000,16000];
+  state.eqBands=freqs.map(freq=>{
+    const f=state.audioCtx.createBiquadFilter();
+    f.type=freq===80?'lowshelf':freq===16000?'highshelf':'peaking';
+    f.frequency.value=freq; f.gain.value=0;
+    return f;
+  });
+  // Reverb
+  state.reverbNode=state.audioCtx.createConvolver();
+  // Delay
+  state.delayNode=state.audioCtx.createDelay(2);
+  state.delayFeedback=state.audioCtx.createGain();
+  state.delayFeedback.gain.value=0;
 
-const a = document.createElement("a");
+  // Chain: source → EQ chain → gain → analyser → destination
+  let prev=state.gainNode;
+  state.eqBands.forEach(f=>{prev.connect(f);prev=f;});
+  prev.connect(state.analyser);
+  state.analyser.connect(state.audioCtx.destination);
 
-a.href = url;
-a.download = "novamotion_export.webm";
-
-a.click();
-
-};
-
-mediaRecorder.start();
-
+  startVUMeter();
 }
 
-function stopRecording(){
-
-if(mediaRecorder){
-mediaRecorder.stop();
+function connectAudioGraph(){
+  if(state.sourceNode){state.sourceNode.disconnect();}
+  state.sourceNode=state.audioCtx.createBufferSource();
+  state.sourceNode.buffer=state.audioBuffer;
+  state.sourceNode.loop=true;
+  state.sourceNode.connect(state.gainNode);
 }
 
+function setMasterVol(v){
+  if(state.gainNode) state.gainNode.gain.value=v/100;
+  if(state.audioElement) state.audioElement.volume=v/100;
 }
 
-function selectScene(scene){
+function updateAudioFX(){
+  // EQ
+  updateEQ();
+}
 
-document.querySelectorAll(".scene").forEach(s=>{
-s.classList.remove("active");
-});
+function updateEQ(){
+  document.querySelectorAll('.eq-band').forEach((el,i)=>{
+    if(state.eqBands[i]) state.eqBands[i].gain.value=+el.value;
+  });
+}
 
-scene.classList.add("active");
+function drawWaveform(buffer){
+  const cvs=document.getElementById('waveformCanvas');
+  const c=cvs.getContext('2d');
+  cvs.width=cvs.clientWidth||280; cvs.height=32;
+  const data=buffer.getChannelData(0);
+  const step=Math.ceil(data.length/cvs.width);
+  c.clearRect(0,0,cvs.width,cvs.height);
+  c.strokeStyle='#3b82f6'; c.lineWidth=1;
+  c.beginPath();
+  for(let i=0;i<cvs.width;i++){
+    let max=0;
+    for(let j=0;j<step;j++) max=Math.max(max,Math.abs(data[i*step+j]||0));
+    const y=cvs.height/2, h2=max*(cvs.height/2);
+    if(i===0)c.moveTo(i,y-h2);else c.lineTo(i,y-h2);
+  }
+  for(let i=cvs.width-1;i>=0;i--){
+    let max=0;
+    for(let j=0;j<step;j++) max=Math.max(max,Math.abs(data[i*step+j]||0));
+    const y=cvs.height/2, h2=max*(cvs.height/2);
+    c.lineTo(i,y+h2);
+  }
+  c.closePath();
+  c.fillStyle='rgba(59,130,246,.3)';c.fill();c.stroke();
+}
 
+function startVUMeter(){
+  const container=document.getElementById('vumeter');
+  container.innerHTML='';
+  const bars=[];
+  for(let i=0;i<16;i++){
+    const b=document.createElement('div');
+    b.className='vu-bar';
+    b.style.width='12px';
+    container.appendChild(b);
+    bars.push(b);
+  }
+  function update(){
+    if(!state.analyser){requestAnimationFrame(update);return;}
+    const data=new Uint8Array(state.analyser.frequencyBinCount);
+    state.analyser.getByteFrequencyData(data);
+    bars.forEach((b,i)=>{
+      const v=data[Math.floor(i*data.length/bars.length)]/255;
+      b.style.height=(v*36)+'px';
+      b.style.background=v>.8?'#ef4444':v>.5?'#f59e0b':'#22c55e';
+    });
+    requestAnimationFrame(update);
+  }
+  update();
+}
+
+// ============================================================
+// PLAYBACK
+// ============================================================
+function togglePlay(){
+  state.playing=!state.playing;
+  document.getElementById('playBtn').textContent=state.playing?'⏸ Pause':'▶ Lecture';
+
+  if(state.audioElement){
+    if(state.playing){
+      state.audioCtx?.resume();
+      state.audioElement.play();
+    }else{
+      state.audioElement.pause();
+    }
+  }
+  if(state.playing&&state.sourceNode&&state.audioCtx&&!state.sourceConnected){
+    try{state.sourceNode.start();state.sourceConnected=true;}catch(e){}
+  }
+}
+
+function setTime(t){
+  state.time=t;
+  updateTimecode();
+  updatePlayhead();
+  if(state.audioElement){
+    state.audioElement.currentTime=t;
+  }
+}
+
+function updateTimecode(){
+  const t=state.time;
+  const m=Math.floor(t/60).toString().padStart(2,'0');
+  const s=Math.floor(t%60).toString().padStart(2,'0');
+  const f=Math.floor((t%1)*state.fps).toString().padStart(2,'0');
+  document.getElementById('timecode').textContent=`${m}:${s}:${f}`;
+  document.getElementById('kfTime').textContent=state.time.toFixed(2)+'s';
+}
+
+function updatePlayhead(){
+  const laneW=document.getElementById('laneVideo').clientWidth||800;
+  const px=80+(state.time/state.duration)*laneW*state.tlZoom;
+  document.getElementById('playhead').style.left=px+'px';
+}
+
+// ============================================================
+// TIMELINE ZOOM & RULER
+// ============================================================
+function zoomTL(dir){
+  state.tlZoom=Math.max(.5,Math.min(5,state.tlZoom+dir*.5));
+  document.getElementById('tlZoomLabel').textContent=state.tlZoom.toFixed(1)+'×';
+  drawRuler();
+}
+
+function drawRuler(){
+  const cvs=document.getElementById('rulerCanvas');
+  const c=cvs.getContext('2d');
+  cvs.width=cvs.clientWidth||800; cvs.height=20;
+  c.fillStyle='#1a1a1a'; c.fillRect(0,0,cvs.width,cvs.height);
+  c.fillStyle='#666'; c.font='9px monospace';
+  const step=1; // 1 second
+  const laneW=cvs.width-80;
+  const pxPerSec=laneW*state.tlZoom/state.duration;
+  for(let t=0;t<=state.duration;t+=step){
+    const x=80+t*pxPerSec;
+    const major=t%5===0;
+    c.strokeStyle=major?'#555':'#333'; c.lineWidth=1;
+    c.beginPath();c.moveTo(x,major?5:10);c.lineTo(x,20);c.stroke();
+    if(major){c.fillStyle='#666';c.fillText(t+'s',x+2,12);}
+  }
+}
+
+// ============================================================
+// SCENES
+// ============================================================
+function selectScene(i){
+  document.querySelectorAll('.scene-thumb').forEach((s,j)=>s.classList.toggle('active',j===i));
+  state.currentScene=i;
+  // capture current scene data
 }
 
 function addScene(){
-
-const scene = document.createElement("div");
-
-scene.className = "scene";
-
-scene.innerHTML = "<span>Nouvelle scène</span>";
-
-scene.onclick = function(){
-selectScene(scene);
-};
-
-document.getElementById("scenes").appendChild(scene);
-
+  const i=state.scenes.length;
+  state.scenes.push({name:`Scène ${i+1}`});
+  const div=document.createElement('div');
+  div.className='scene-thumb'; div.id='scene-'+i;
+  div.onclick=()=>selectScene(i);
+  const cvs=document.createElement('canvas');
+  cvs.width=110;cvs.height=62;cvs.id='thumb-'+i;
+  const lbl=document.createElement('div');
+  lbl.className='scene-label';lbl.textContent=`Scène ${i+1}`;
+  div.appendChild(cvs);div.appendChild(lbl);
+  document.getElementById('scenes-bar').insertBefore(div,document.querySelector('.add-scene'));
 }
 
-const clips = document.querySelectorAll(".clip");
+// Update scene thumbnails periodically
+setInterval(()=>{
+  document.querySelectorAll('[id^="thumb-"]').forEach(cvs=>{
+    const c=cvs.getContext('2d');
+    c.drawImage(canvas,0,0,cvs.width,cvs.height);
+  });
+},500);
 
-clips.forEach(clip=>{
+// ============================================================
+// MEDIA LIBRARY
+// ============================================================
+function addMedia(icon,name){
+  const div=document.createElement('div');
+  div.className='media-item';
+  div.innerHTML=`<span class="media-icon">${icon}</span><span>${name}</span>`;
+  document.getElementById('mediaLibrary').appendChild(div);
+  const info=document.getElementById('mediaLibrary').nextElementSibling;
+  if(info) info.textContent=document.querySelectorAll('.media-item').length+' fichier(s) importé(s)';
+}
 
-clip.addEventListener("dragstart",dragStart);
+// ============================================================
+// EXPORT
+// ============================================================
+function exportFrame(){
+  const link=document.createElement('a');
+  link.download='novamotion_frame.png';
+  link.href=canvas.toDataURL('image/png');
+  link.click();
+}
 
+function exportVideo(){
+  if(!state.audioElement||!state.audioElement.src){
+    alert('Aucun audio détecté. Export vidéo sans son (WebM).');
+    startVideoOnly();
+    return;
+  }
+  startVideoOnly();
+}
+
+let recStream, recAudio, recDest;
+function startVideoOnly(){
+  document.getElementById('recBadge').style.display='block';
+  document.getElementById('recBtn').classList.add('recording');
+  state.chunks=[];
+  const vStream=canvas.captureStream(state.fps);
+  let finalStream=vStream;
+
+  if(state.audioCtx&&state.analyser){
+    recDest=state.audioCtx.createMediaStreamDestination();
+    state.analyser.connect(recDest);
+    const combined=new MediaStream([...vStream.getVideoTracks(),...recDest.stream.getAudioTracks()]);
+    finalStream=combined;
+  }
+
+  const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
+  const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
+  state.mediaRecorder=new MediaRecorder(finalStream,{mimeType:mime,videoBitsPerSecond:5000000});
+  state.mediaRecorder.ondataavailable=e=>{if(e.data.size>0)state.chunks.push(e.data)};
+  state.mediaRecorder.onstop=()=>{
+    document.getElementById('recBadge').style.display='none';
+    document.getElementById('recBtn').classList.remove('recording');
+    const blob=new Blob(state.chunks,{type:mime});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');a.href=url;a.download='novamotion_export.webm';a.click();
+  };
+  state.mediaRecorder.start(100);
+  state.recording=true;
+  if(!state.playing) togglePlay();
+}
+
+function toggleRecord(){
+  if(!state.recording){
+    startVideoOnly();
+  }else{
+    state.mediaRecorder?.stop();
+    state.recording=false;
+    if(recDest) try{state.analyser.disconnect(recDest);}catch(e){}
+  }
+}
+
+// ============================================================
+// KEYFRAMES
+// ============================================================
+function addKeyframe(){
+  state.keyframes.push({time:state.time, textX:state.textLayers[0]?.x, textY:state.textLayers[0]?.y, imgRot:state.img.rot});
+  state.keyframes.sort((a,b)=>a.time-b.time);
+  renderKFList();
+}
+
+function renderKFList(){
+  const list=document.getElementById('kfList');
+  list.innerHTML='';
+  state.keyframes.forEach((kf,i)=>{
+    const row=document.createElement('div');
+    row.className='kf-row';
+    row.innerHTML=`<div class="kf-dot" title="Supprimer" onclick="state.keyframes.splice(${i},1);renderKFList()"></div><span class="kf-name">T=${kf.time.toFixed(2)}s</span><span class="kf-val">X:${Math.round(kf.textX||0)}</span><span class="kf-val">Y:${Math.round(kf.textY||0)}</span>`;
+    list.appendChild(row);
+  });
+}
+
+// Draw easing curve
+function drawEasingCurve(){
+  const cvs=document.getElementById('curveCanvas');
+  const c=cvs.getContext('2d');
+  const W=cvs.width, H=cvs.height;
+  c.clearRect(0,0,W,H);
+  c.fillStyle='#0a0a0a';c.fillRect(0,0,W,H);
+  c.strokeStyle='#1e1e1e';c.lineWidth=1;
+  c.beginPath();c.moveTo(0,H/2);c.lineTo(W,H/2);c.stroke();
+  c.beginPath();c.moveTo(W/2,0);c.lineTo(W/2,H);c.stroke();
+  c.strokeStyle='#3b82f6';c.lineWidth=2;
+  const type=document.getElementById('easingType').value;
+  c.beginPath();
+  for(let i=0;i<=100;i++){
+    const t=i/100, y=1-applyEasing(t,type);
+    i===0?c.moveTo(t*W,y*H):c.lineTo(t*W,y*H);
+  }
+  c.stroke();
+}
+
+function applyEasing(t,type){
+  switch(type){
+    case 'linear': return t;
+    case 'easeIn': return t*t*t;
+    case 'easeOut': return 1-(1-t)*(1-t)*(1-t);
+    case 'easeInOut': return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
+    case 'bounce': return bounceEase(t);
+    case 'elastic': return t===0?0:t===1?1:Math.pow(2,-10*t)*Math.sin((t*10-0.75)*(2*Math.PI)/3)+1;
+  }
+  return t;
+}
+
+function bounceEase(t){
+  const n1=7.5625,d1=2.75;
+  if(t<1/d1)return n1*t*t;
+  if(t<2/d1)return n1*(t-=1.5/d1)*t+.75;
+  if(t<2.5/d1)return n1*(t-=2.25/d1)*t+.9375;
+  return n1*(t-=2.625/d1)*t+.984375;
+}
+
+document.getElementById('easingType').addEventListener('change',drawEasingCurve);
+drawEasingCurve();
+
+// ============================================================
+// DRAG & DROP CLIPS
+// ============================================================
+let dragged=null;
+document.querySelectorAll('.clip').forEach(c=>{
+  c.addEventListener('mousedown',e=>{
+    dragged=c;
+    const startX=e.clientX, origLeft=parseInt(c.style.left)||0;
+    const onMove=e2=>{
+      const dx=e2.clientX-startX;
+      c.style.left=Math.max(0,origLeft+dx)+'px';
+    };
+    const onUp=()=>{
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+      dragged=null;
+    };
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
 });
 
-const tracks = document.querySelectorAll(".track");
+// ============================================================
+// DRAWRULER + INIT
+// ============================================================
+window.addEventListener('resize',drawRuler);
+setTimeout(drawRuler,100);
 
-tracks.forEach(track=>{
-
-track.addEventListener("dragover",dragOver);
-track.addEventListener("drop",dropClip);
-
-});
-
-let dragged;
-
-function dragStart(){
-
-dragged = this;
-
-}
-
-function dragOver(e){
-
-e.preventDefault();
-
-}
-
-function dropClip(){
-
-this.appendChild(dragged);
-
-}
-
+// Start draw loop
+requestAnimationFrame(ts=>{state.lastTime=ts;state.fpsTimer=ts;drawFrame(ts)});
 </script>
-
 </body>
 </html>
-"""
-
-html_path = Path("/mnt/data/novamotion_ultimate_studio.html")
-html_path.write_text(html, encoding="utf-8")
-
-zip_path = Path("/mnt/data/novamotion_ultimate_studio.zip")
-with ZipFile(zip_path, "w") as z:
-    z.write(html_path, arcname="novamotion_ultimate_studio.html")
-
-print("Created:", html_path)
-print("Created:", zip_path)
