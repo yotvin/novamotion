@@ -1,29 +1,32 @@
-<!DOCTYPE html>
+from pathlib import Path
+from zipfile import ZipFile
+
+html = r"""<!DOCTYPE html>
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NovaMotion Pro Studio</title>
+<title>NovaMotion Ultimate Studio</title>
 
 <style>
 *{box-sizing:border-box}
 
 body{
 margin:0;
-background:#0d0d0d;
-color:white;
+background:#0b0b0b;
 font-family:Arial,sans-serif;
+color:white;
 overflow:hidden;
 }
 
 header{
 height:60px;
-background:#171717;
+background:#151515;
 display:flex;
 align-items:center;
 justify-content:space-between;
 padding:10px 20px;
-border-bottom:2px solid #2a2a2a;
+border-bottom:2px solid #222;
 }
 
 header h1{
@@ -31,43 +34,24 @@ margin:0;
 font-size:22px;
 }
 
-.toolbar{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-button,input{
-border:none;
-border-radius:6px;
-padding:8px;
-}
-
-button{
-background:#2563eb;
-color:white;
-cursor:pointer;
-}
-
-button:hover{
-opacity:0.9;
-}
-
-#layout{
+#main{
 display:grid;
-grid-template-columns:300px 1fr;
+grid-template-columns:320px 1fr;
 height:calc(100vh - 60px);
 }
 
 #sidebar{
-background:#141414;
-border-right:2px solid #252525;
+background:#111;
+border-right:2px solid #222;
 overflow:auto;
-padding:15px;
+padding:12px;
+resize:horizontal;
+min-width:250px;
+max-width:600px;
 }
 
 .panel{
-background:#1e1e1e;
+background:#1b1b1b;
 padding:12px;
 border-radius:10px;
 margin-bottom:15px;
@@ -78,63 +62,122 @@ margin-top:0;
 font-size:18px;
 }
 
+button,input,select,textarea{
+border:none;
+border-radius:6px;
+padding:8px;
+}
+
+button{
+background:#2563eb;
+color:white;
+cursor:pointer;
+margin-top:5px;
+}
+
+button:hover{
+opacity:0.9;
+}
+
+textarea,
+input[type=color],
+input[type=range]{
+width:100%;
+}
+
+textarea{
+height:70px;
+background:#0f0f0f;
+color:white;
+border:1px solid #333;
+}
+
 #workspace{
 display:flex;
 flex-direction:column;
 height:100%;
 }
 
-#previewZone{
+#previewContainer{
 flex:1;
+background:#000;
 display:flex;
 align-items:center;
 justify-content:center;
-background:#000;
 position:relative;
+overflow:hidden;
+resize:vertical;
+min-height:300px;
 }
 
 canvas{
 background:#111;
 border:3px solid #333;
+max-width:100%;
+max-height:100%;
+}
+
+#recordIndicator{
+position:absolute;
+top:15px;
+right:15px;
+background:red;
+padding:10px 15px;
+border-radius:30px;
+display:none;
+font-weight:bold;
+animation:blink 1s infinite;
+}
+
+@keyframes blink{
+0%{opacity:1}
+50%{opacity:0.4}
+100%{opacity:1}
 }
 
 #timeline{
 height:260px;
-background:#101010;
-border-top:2px solid #2a2a2a;
-overflow:auto;
+background:#0f0f0f;
+border-top:2px solid #222;
 padding:10px;
+overflow:auto;
 }
 
 .track{
-background:#1f1f1f;
+background:#1d1d1d;
 padding:10px;
 border-radius:8px;
 margin-bottom:10px;
+min-height:60px;
 }
 
 .clip{
 display:inline-block;
-background:#2563eb;
 padding:8px;
-margin:4px;
+background:#2563eb;
 border-radius:6px;
-cursor:pointer;
+margin:4px;
+cursor:grab;
+user-select:none;
 }
 
-#scenesBar{
+.clip:active{
+cursor:grabbing;
+}
+
+#scenes{
 display:flex;
 gap:10px;
-overflow-x:auto;
 padding:10px;
-background:#151515;
-border-top:2px solid #2a2a2a;
+background:#141414;
+border-top:2px solid #222;
+overflow-x:auto;
 }
 
-.sceneThumb{
+.scene{
 min-width:180px;
 height:100px;
-background:#222;
+background:#1e1e1e;
 border:2px solid #444;
 border-radius:8px;
 display:flex;
@@ -144,50 +187,35 @@ cursor:pointer;
 position:relative;
 }
 
-.sceneThumb:hover{
+.scene:hover{
 border-color:#2563eb;
 }
 
-.sceneLabel{
+.scene.active{
+border-color:#00ff90;
+}
+
+.scene span{
 position:absolute;
 bottom:5px;
 left:5px;
 font-size:12px;
-background:#000;
+background:black;
 padding:2px 6px;
 border-radius:4px;
 }
 
-input[type=color],
-input[type=range],
-textarea{
-width:100%;
-}
-
-textarea{
-height:70px;
-background:#111;
-color:white;
-border:1px solid #444;
-padding:10px;
+.mediaItem{
+background:#242424;
+padding:8px;
+border-radius:6px;
+margin-bottom:6px;
+font-size:13px;
 }
 
 .small{
 font-size:12px;
-color:#bbb;
-}
-
-.mediaList{
-max-height:180px;
-overflow:auto;
-}
-
-.mediaItem{
-background:#262626;
-padding:8px;
-border-radius:6px;
-margin-bottom:8px;
-font-size:13px;
+color:#aaa;
 }
 
 audio{
@@ -200,53 +228,68 @@ margin-top:10px;
 <body>
 
 <header>
-<h1>NovaMotion Pro Studio</h1>
+<h1>NovaMotion Ultimate Studio</h1>
 
-<div class="toolbar">
-<button onclick="addTextLayer()">Texte</button>
-<button onclick="addImageLayer()">Image</button>
-<button onclick="addTransition()">Transition</button>
-<button onclick="playAnimation()">Lecture</button>
-<button onclick="exportPNG()">Exporter PNG</button>
-<button onclick="startRecording()">REC</button>
-<button onclick="stopRecording()">STOP</button>
+<div>
+<button onclick="playScene()">▶ Lecture</button>
+<button onclick="startRecording()">⏺ REC</button>
+<button onclick="stopRecording()">■ STOP</button>
+<button onclick="exportFrame()">📷 PNG</button>
 </div>
 </header>
 
-<div id="layout">
+<div id="main">
 
 <div id="sidebar">
 
 <div class="panel">
 <h2>Texte</h2>
 
-<textarea id="textContent">Titre du Journal TV</textarea>
+<textarea id="textInput">Bienvenue sur NovaMotion Ultimate</textarea>
 
 <label>Taille</label>
-<input type="range" id="fontSize" min="20" max="120" value="54">
+<input type="range" id="fontSize" min="20" max="120" value="60">
 
 <label>Couleur</label>
 <input type="color" id="textColor" value="#ffffff">
 
-<button style="width:100%;margin-top:10px;" onclick="updateText()">Appliquer</button>
+<button onclick="applyText()">Appliquer texte</button>
 </div>
 
 <div class="panel">
-<h2>Importer un logo</h2>
+<h2>Importer image / logo</h2>
 
-<input type="file" id="logoInput" accept="image/*">
+<input type="file" id="imageLoader" accept="image/*">
 
 <div class="small">
-Importez des PNG, JPG ou logos transparents.
+PNG, JPG, logos transparents
 </div>
+
+<button onclick="spinImage()">Rotation</button>
+<button onclick="flashImage()">Clignotement</button>
+<button onclick="bounceImage()">Bounce</button>
 </div>
 
 <div class="panel">
 <h2>Importer musique</h2>
 
-<input type="file" id="musicInput" accept="audio/*">
+<input type="file" id="musicLoader" accept="audio/*">
 
-<div id="audioContainer"></div>
+<div id="audioBox"></div>
+</div>
+
+<div class="panel">
+<h2>Transitions vidéo</h2>
+
+<select id="transitionType">
+<option>Fade</option>
+<option>Slide Left</option>
+<option>Zoom</option>
+<option>Flash</option>
+<option>Blur</option>
+</select>
+
+<button onclick="applyTransition()">Appliquer transition</button>
 </div>
 
 <div class="panel">
@@ -254,70 +297,69 @@ Importez des PNG, JPG ou logos transparents.
 
 <input type="color" id="bgColor" value="#111111">
 
-<button style="width:100%;margin-top:10px;" onclick="changeBackground()">Changer fond</button>
-</div>
-
-<div class="panel">
-<h2>Transitions</h2>
-
-<button style="width:100%;margin-bottom:10px;" onclick="transitionFade()">Fade</button>
-
-<button style="width:100%;margin-bottom:10px;" onclick="transitionSlide()">Slide</button>
-
-<button style="width:100%;" onclick="transitionZoom()">Zoom</button>
+<button onclick="changeBackground()">Changer fond</button>
 </div>
 
 <div class="panel">
 <h2>Médias importés</h2>
-<div class="mediaList" id="mediaList"></div>
+
+<div id="mediaLibrary"></div>
 </div>
 
 </div>
 
 <div id="workspace">
 
-<div id="previewZone">
+<div id="previewContainer">
+
+<div id="recordIndicator">● ENREGISTREMENT</div>
+
 <canvas id="canvas" width="1280" height="720"></canvas>
+
 </div>
 
 <div id="timeline">
 
-<div class="track">
-<strong>Piste vidéo</strong>
-<div class="clip">Scène 1</div>
-<div class="clip">Scène 2</div>
-<div class="clip">Transition Fade</div>
+<div class="track" id="videoTrack">
+<strong>Piste Vidéo</strong>
+<div class="clip" draggable="true">Scène Intro</div>
+<div class="clip" draggable="true">Transition</div>
 </div>
 
-<div class="track">
-<strong>Piste texte</strong>
-<div class="clip">Titre principal</div>
+<div class="track" id="textTrack">
+<strong>Piste Texte</strong>
+<div class="clip" draggable="true">Titre TV</div>
 </div>
 
-<div class="track">
-<strong>Piste audio</strong>
-<div class="clip">Musique ambiance</div>
-</div>
-
-</div>
-
-<div id="scenesBar">
-
-<div class="sceneThumb" onclick="selectScene(1)">
-<div class="sceneLabel">Scène 1</div>
-</div>
-
-<div class="sceneThumb" onclick="selectScene(2)">
-<div class="sceneLabel">Scène 2</div>
-</div>
-
-<div class="sceneThumb" onclick="selectScene(3)">
-<div class="sceneLabel">Transition</div>
+<div class="track" id="audioTrack">
+<strong>Piste Audio</strong>
+<div class="clip" draggable="true">Musique</div>
 </div>
 
 </div>
 
+<div id="scenes">
+
+<div class="scene active" onclick="selectScene(this)">
+<span>Scène 1</span>
 </div>
+
+<div class="scene" onclick="selectScene(this)">
+<span>Scène 2</span>
+</div>
+
+<div class="scene" onclick="selectScene(this)">
+<span>Scène 3</span>
+</div>
+
+<div class="scene" onclick="addScene()">
+<span>+ Nouvelle scène</span>
+</div>
+
+</div>
+
+</div>
+
 </div>
 
 <script>
@@ -326,21 +368,22 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
 let bgColor = "#111111";
-let textValue = "Titre du Journal TV";
-let fontSize = 54;
+let text = "Bienvenue sur NovaMotion Ultimate";
+let fontSize = 60;
 let textColor = "#ffffff";
 
-let logoImage = null;
+let imageObj = null;
+let imageAngle = 0;
+let imageVisible = true;
+let bounceY = 0;
 
-let textX = 100;
-let logoX = 900;
-let logoY = 200;
-
-let recording = false;
 let mediaRecorder;
-let recordedChunks = [];
+let chunks = [];
 
-function render(){
+let textX = 120;
+let textY = 140;
+
+function draw(){
 
 ctx.clearRect(0,0,canvas.width,canvas.height);
 
@@ -349,21 +392,30 @@ ctx.fillRect(0,0,canvas.width,canvas.height);
 
 ctx.fillStyle = textColor;
 ctx.font = fontSize + "px Arial";
-ctx.fillText(textValue,textX,140);
+ctx.fillText(text,textX,textY);
 
-if(logoImage){
-ctx.drawImage(logoImage,logoX,logoY,220,220);
+if(imageObj && imageVisible){
+
+ctx.save();
+
+ctx.translate(980,260+bounceY);
+ctx.rotate(imageAngle);
+
+ctx.drawImage(imageObj,-120,-120,240,240);
+
+ctx.restore();
+
 }
 
-requestAnimationFrame(render);
+requestAnimationFrame(draw);
 
 }
 
-render();
+draw();
 
-function updateText(){
+function applyText(){
 
-textValue = document.getElementById("textContent").value;
+text = document.getElementById("textInput").value;
 fontSize = document.getElementById("fontSize").value;
 textColor = document.getElementById("textColor").value;
 
@@ -375,106 +427,74 @@ bgColor = document.getElementById("bgColor").value;
 
 }
 
-document.getElementById("logoInput").addEventListener("change",(e)=>{
+document.getElementById("imageLoader").addEventListener("change",function(e){
 
 const file = e.target.files[0];
 
-if(file){
+if(!file)return;
 
 const reader = new FileReader();
 
 reader.onload = function(event){
 
-logoImage = new Image();
-
-logoImage.src = event.target.result;
+imageObj = new Image();
+imageObj.src = event.target.result;
 
 };
 
 reader.readAsDataURL(file);
 
-const media = document.createElement("div");
-media.className = "mediaItem";
-media.innerHTML = "🖼️ " + file.name;
-
-document.getElementById("mediaList").appendChild(media);
-
-}
+addMedia("🖼️ " + file.name);
 
 });
 
-document.getElementById("musicInput").addEventListener("change",(e)=>{
+document.getElementById("musicLoader").addEventListener("change",function(e){
 
 const file = e.target.files[0];
 
-if(file){
+if(!file)return;
 
 const url = URL.createObjectURL(file);
 
 const audio = document.createElement("audio");
+
 audio.controls = true;
 audio.src = url;
 
-document.getElementById("audioContainer").innerHTML = "";
-document.getElementById("audioContainer").appendChild(audio);
+document.getElementById("audioBox").innerHTML = "";
+document.getElementById("audioBox").appendChild(audio);
 
-const media = document.createElement("div");
-media.className = "mediaItem";
-media.innerHTML = "🎵 " + file.name;
-
-document.getElementById("mediaList").appendChild(media);
-
-}
+addMedia("🎵 " + file.name);
 
 });
 
-function addTextLayer(){
+function addMedia(name){
 
-const clip = document.createElement("div");
-clip.className = "clip";
-clip.innerHTML = "Nouveau Texte";
+const div = document.createElement("div");
 
-document.querySelectorAll(".track")[1].appendChild(clip);
+div.className = "mediaItem";
+div.innerHTML = name;
 
-}
-
-function addImageLayer(){
-
-const clip = document.createElement("div");
-clip.className = "clip";
-clip.innerHTML = "Image";
-
-document.querySelectorAll(".track")[0].appendChild(clip);
+document.getElementById("mediaLibrary").appendChild(div);
 
 }
 
-function addTransition(){
+function playScene(){
 
-const clip = document.createElement("div");
-clip.className = "clip";
-clip.innerHTML = "Transition";
-
-document.querySelectorAll(".track")[0].appendChild(clip);
-
-}
-
-function playAnimation(){
-
-let step = 0;
+let steps = 0;
 
 const anim = setInterval(()=>{
 
-textX += 8;
-logoX -= 4;
+textX += 4;
+imageAngle += 0.03;
 
-step++;
+steps++;
 
-if(step > 180){
+if(steps > 180){
 
 clearInterval(anim);
 
-textX = 100;
-logoX = 900;
+textX = 120;
 
 }
 
@@ -482,17 +502,87 @@ logoX = 900;
 
 }
 
-function transitionFade(){
+function spinImage(){
 
-let opacity = 1;
+let count = 0;
+
+const spin = setInterval(()=>{
+
+imageAngle += 0.2;
+
+count++;
+
+if(count > 80){
+clearInterval(spin);
+}
+
+},16);
+
+}
+
+function flashImage(){
+
+let flashes = 0;
+
+const flash = setInterval(()=>{
+
+imageVisible = !imageVisible;
+
+flashes++;
+
+if(flashes > 12){
+
+imageVisible = true;
+clearInterval(flash);
+
+}
+
+},120);
+
+}
+
+function bounceImage(){
+
+let dir = 1;
+
+const bounce = setInterval(()=>{
+
+bounceY += dir*4;
+
+if(bounceY > 40) dir=-1;
+if(bounceY < -40) dir=1;
+
+},16);
+
+setTimeout(()=>{
+clearInterval(bounce);
+bounceY = 0;
+},4000);
+
+}
+
+function applyTransition(){
+
+const type = document.getElementById("transitionType").value;
+
+if(type === "Fade") fadeTransition();
+if(type === "Slide Left") slideTransition();
+if(type === "Zoom") zoomTransition();
+if(type === "Flash") flashTransition();
+if(type === "Blur") blurTransition();
+
+}
+
+function fadeTransition(){
+
+let alpha = 1;
 
 const fade = setInterval(()=>{
 
-ctx.globalAlpha = opacity;
+ctx.globalAlpha = alpha;
+alpha -= 0.02;
 
-opacity -= 0.02;
-
-if(opacity <= 0){
+if(alpha <= 0){
 
 ctx.globalAlpha = 1;
 clearInterval(fade);
@@ -503,55 +593,83 @@ clearInterval(fade);
 
 }
 
-function transitionSlide(){
+function slideTransition(){
 
-let pos = -1280;
+let x = -1280;
 
 const slide = setInterval(()=>{
 
 ctx.fillStyle = "#000";
-ctx.fillRect(pos,0,1280,720);
+ctx.fillRect(x,0,1280,720);
 
-pos += 30;
+x += 40;
 
-if(pos > 1280){
-
+if(x > 1280){
 clearInterval(slide);
-
 }
 
 },16);
 
 }
 
-function transitionZoom(){
+function zoomTransition(){
 
 let zoom = 1;
 
 const z = setInterval(()=>{
 
 ctx.save();
+
 ctx.scale(zoom,zoom);
 
 zoom += 0.01;
 
 ctx.restore();
 
-if(zoom > 2){
-
+if(zoom > 1.8){
 clearInterval(z);
-
 }
 
 },16);
 
 }
 
-function exportPNG(){
+function flashTransition(){
+
+let flashes = 0;
+
+const fl = setInterval(()=>{
+
+canvas.style.opacity = canvas.style.opacity == 0 ? 1 : 0;
+
+flashes++;
+
+if(flashes > 10){
+
+canvas.style.opacity = 1;
+clearInterval(fl);
+
+}
+
+},100);
+
+}
+
+function blurTransition(){
+
+canvas.style.filter = "blur(12px)";
+
+setTimeout(()=>{
+canvas.style.filter = "blur(0px)";
+},1200);
+
+}
+
+function exportFrame(){
 
 const link = document.createElement("a");
 
-link.download = "novamotion_frame.png";
+link.download = "frame.png";
 
 link.href = canvas.toDataURL();
 
@@ -561,25 +679,29 @@ link.click();
 
 function startRecording(){
 
+document.getElementById("recordIndicator").style.display = "block";
+
 const stream = canvas.captureStream(30);
 
 mediaRecorder = new MediaRecorder(stream,{
 mimeType:"video/webm"
 });
 
-recordedChunks = [];
+chunks = [];
 
 mediaRecorder.ondataavailable = e=>{
 
 if(e.data.size > 0){
-recordedChunks.push(e.data);
+chunks.push(e.data);
 }
 
 };
 
 mediaRecorder.onstop = ()=>{
 
-const blob = new Blob(recordedChunks,{
+document.getElementById("recordIndicator").style.display = "none";
+
+const blob = new Blob(chunks,{
 type:"video/webm"
 });
 
@@ -588,7 +710,7 @@ const url = URL.createObjectURL(blob);
 const a = document.createElement("a");
 
 a.href = url;
-a.download = "novamotion_video.webm";
+a.download = "novamotion_export.webm";
 
 a.click();
 
@@ -606,9 +728,66 @@ mediaRecorder.stop();
 
 }
 
-function selectScene(id){
+function selectScene(scene){
 
-alert("Scène sélectionnée : " + id);
+document.querySelectorAll(".scene").forEach(s=>{
+s.classList.remove("active");
+});
+
+scene.classList.add("active");
+
+}
+
+function addScene(){
+
+const scene = document.createElement("div");
+
+scene.className = "scene";
+
+scene.innerHTML = "<span>Nouvelle scène</span>";
+
+scene.onclick = function(){
+selectScene(scene);
+};
+
+document.getElementById("scenes").appendChild(scene);
+
+}
+
+const clips = document.querySelectorAll(".clip");
+
+clips.forEach(clip=>{
+
+clip.addEventListener("dragstart",dragStart);
+
+});
+
+const tracks = document.querySelectorAll(".track");
+
+tracks.forEach(track=>{
+
+track.addEventListener("dragover",dragOver);
+track.addEventListener("drop",dropClip);
+
+});
+
+let dragged;
+
+function dragStart(){
+
+dragged = this;
+
+}
+
+function dragOver(e){
+
+e.preventDefault();
+
+}
+
+function dropClip(){
+
+this.appendChild(dragged);
 
 }
 
@@ -616,3 +795,14 @@ alert("Scène sélectionnée : " + id);
 
 </body>
 </html>
+"""
+
+html_path = Path("/mnt/data/novamotion_ultimate_studio.html")
+html_path.write_text(html, encoding="utf-8")
+
+zip_path = Path("/mnt/data/novamotion_ultimate_studio.zip")
+with ZipFile(zip_path, "w") as z:
+    z.write(html_path, arcname="novamotion_ultimate_studio.html")
+
+print("Created:", html_path)
+print("Created:", zip_path)
