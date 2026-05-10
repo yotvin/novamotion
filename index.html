@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NovaMotion Studio</title>
+<style>
+body{
+    margin:0;
+    background:#111;
+    color:white;
+    font-family:Arial,sans-serif;
+    overflow:hidden;
+}
+header{
+    background:#1e1e1e;
+    padding:12px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    border-bottom:2px solid #333;
+}
+header h1{
+    margin:0;
+    font-size:22px;
+}
+.toolbar{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+}
+button,input{
+    padding:8px;
+    border:none;
+    border-radius:6px;
+}
+button{
+    background:#2f74ff;
+    color:white;
+    cursor:pointer;
+}
+button:hover{
+    opacity:0.85;
+}
+#main{
+    display:flex;
+    height:calc(100vh - 60px);
+}
+#leftPanel{
+    width:320px;
+    background:#181818;
+    border-right:2px solid #333;
+    overflow:auto;
+    padding:12px;
+}
+.section{
+    margin-bottom:20px;
+    background:#202020;
+    padding:10px;
+    border-radius:10px;
+}
+.section h2{
+    margin-top:0;
+}
+#previewArea{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+}
+#canvasContainer{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:#000;
+}
+canvas{
+    background:#222;
+    border:3px solid #444;
+}
+#timeline{
+    height:180px;
+    background:#151515;
+    border-top:2px solid #333;
+    overflow:auto;
+    padding:10px;
+}
+.track{
+    background:#242424;
+    margin-bottom:10px;
+    padding:10px;
+    border-radius:8px;
+}
+.layer{
+    background:#2f74ff;
+    margin-top:6px;
+    padding:6px;
+    border-radius:5px;
+}
+.small{
+    font-size:12px;
+    color:#bbb;
+}
+input[type=color]{
+    width:100%;
+    height:40px;
+}
+textarea{
+    width:100%;
+    height:70px;
+    background:#111;
+    color:white;
+    border:1px solid #333;
+}
+.range{
+    width:100%;
+}
+</style>
+</head>
+<body>
+
+<header>
+    <h1>NovaMotion Studio</h1>
+
+    <div class="toolbar">
+        <button onclick="addText()">Ajouter Texte</button>
+        <button onclick="addLogo()">Ajouter Logo</button>
+        <button onclick="animateScene()">Animation</button>
+        <button onclick="clearCanvas()">Effacer</button>
+        <button onclick="exportImage()">Exporter PNG</button>
+        <button onclick="startRecording()">REC</button>
+        <button onclick="stopRecording()">STOP</button>
+    </div>
+</header>
+
+<div id="main">
+
+<div id="leftPanel">
+
+<div class="section">
+<h2>Texte</h2>
+<textarea id="textInput">Bienvenue sur NovaMotion Studio</textarea>
+<label>Taille</label>
+<input type="range" min="20" max="120" value="48" id="fontSize" class="range">
+<label>Couleur du texte</label>
+<input type="color" id="textColor" value="#ffffff">
+</div>
+
+<div class="section">
+<h2>Fond</h2>
+<label>Couleur du fond</label>
+<input type="color" id="bgColor" value="#222222">
+<button style="margin-top:10px;width:100%;" onclick="changeBackground()">Appliquer</button>
+</div>
+
+<div class="section">
+<h2>Animations TV</h2>
+<button style="width:100%;" onclick="lowerThird()">Habillage Journal TV</button>
+<button style="width:100%;margin-top:10px;" onclick="breakingNews()">Breaking News</button>
+<button style="width:100%;margin-top:10px;" onclick="introAnimation()">Intro Chaîne</button>
+</div>
+
+<div class="section">
+<h2>Informations</h2>
+<p class="small">
+Ce prototype permet :
+<br>• ajout de textes
+<br>• animation de logos
+<br>• export PNG
+<br>• enregistrement vidéo WEBM
+<br>• fond personnalisable
+<br>• mini système de timeline
+<br>• habillages style télévision
+</p>
+</div>
+
+</div>
+
+<div id="previewArea">
+
+<div id="canvasContainer">
+<canvas id="scene" width="1280" height="720"></canvas>
+</div>
+
+<div id="timeline">
+<div class="track">
+<strong>Piste vidéo 1</strong>
+<div class="layer">Texte principal</div>
+</div>
+
+<div class="track">
+<strong>Piste animation</strong>
+<div class="layer">Logo animé</div>
+</div>
+
+<div class="track">
+<strong>Piste habillage TV</strong>
+<div class="layer">Lower Third</div>
+</div>
+</div>
+
+</div>
+</div>
+
+<script>
+
+const canvas = document.getElementById("scene");
+const ctx = canvas.getContext("2d");
+
+let backgroundColor = "#222222";
+let textX = 100;
+let logoAngle = 0;
+let mediaRecorder;
+let recordedChunks = [];
+
+function drawScene(){
+    ctx.fillStyle = backgroundColor;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    const text = document.getElementById("textInput").value;
+    const fontSize = document.getElementById("fontSize").value;
+    const textColor = document.getElementById("textColor").value;
+
+    ctx.fillStyle = textColor;
+    ctx.font = fontSize + "px Arial";
+    ctx.fillText(text,textX,200);
+
+    ctx.save();
+    ctx.translate(1000,250);
+    ctx.rotate(logoAngle);
+    ctx.fillStyle = "#2f74ff";
+    ctx.fillRect(-60,-60,120,120);
+    ctx.fillStyle = "white";
+    ctx.font = "24px Arial";
+    ctx.fillText("LOGO",-35,10);
+    ctx.restore();
+
+    requestAnimationFrame(drawScene);
+}
+
+drawScene();
+
+function addText(){
+    textX = 100;
+}
+
+function addLogo(){
+    logoAngle += 0.2;
+}
+
+function animateScene(){
+    let pos = 100;
+    let interval = setInterval(()=>{
+        textX += 5;
+        logoAngle += 0.05;
+
+        if(textX > 1000){
+            textX = 100;
+        }
+
+        pos++;
+        if(pos > 400){
+            clearInterval(interval);
+        }
+    },16);
+}
+
+function clearCanvas(){
+    backgroundColor = "#000000";
+    document.getElementById("textInput").value = "";
+}
+
+function changeBackground(){
+    backgroundColor = document.getElementById("bgColor").value;
+}
+
+function exportImage(){
+    const link = document.createElement("a");
+    link.download = "novamotion_export.png";
+    link.href = canvas.toDataURL();
+    link.click();
+}
+
+function lowerThird(){
+    ctx.fillStyle = "#003cff";
+    ctx.fillRect(0,620,700,100);
+
+    ctx.fillStyle = "white";
+    ctx.font = "42px Arial";
+    ctx.fillText("NOUVELLE ÉDITION",40,680);
+}
+
+function breakingNews(){
+    ctx.fillStyle = "red";
+    ctx.fillRect(0,0,1280,90);
+
+    ctx.fillStyle = "white";
+    ctx.font = "50px Arial";
+    ctx.fillText("BREAKING NEWS",30,60);
+}
+
+function introAnimation(){
+    let size = 10;
+
+    let anim = setInterval(()=>{
+        ctx.fillStyle = "black";
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+
+        ctx.fillStyle = "#2f74ff";
+        ctx.beginPath();
+        ctx.arc(640,360,size,0,Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = "white";
+        ctx.font = "60px Arial";
+        ctx.fillText("NovaMotion Studio",350,380);
+
+        size += 8;
+
+        if(size > 600){
+            clearInterval(anim);
+        }
+    },16);
+}
+
+function startRecording(){
+
+    const stream = canvas.captureStream(30);
+
+    mediaRecorder = new MediaRecorder(stream,{
+        mimeType:"video/webm"
+    });
+
+    recordedChunks = [];
+
+    mediaRecorder.ondataavailable = e=>{
+        if(e.data.size > 0){
+            recordedChunks.push(e.data);
+        }
+    };
+
+    mediaRecorder.onstop = ()=>{
+        const blob = new Blob(recordedChunks,{
+            type:"video/webm"
+        });
+
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "animation.webm";
+        a.click();
+    };
+
+    mediaRecorder.start();
+}
+
+function stopRecording(){
+    if(mediaRecorder){
+        mediaRecorder.stop();
+    }
+}
+
+</script>
+
+</body>
+</html>
