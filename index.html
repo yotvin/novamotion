@@ -2,1655 +2,926 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NovaMotion Ultimate Studio</title>
+<title>NovaMotion Studio</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{
-  --bg:#0a0a0a;--surface:#121212;--panel:#1a1a1a;--border:#2a2a2a;
-  --accent:#3b82f6;--accent2:#8b5cf6;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;
-  --text:#f0f0f0;--muted:#888;
-}
-body{background:var(--bg);font-family:'Segoe UI',Arial,sans-serif;color:var(--text);overflow:hidden;height:100vh;display:flex;flex-direction:column}
+body{background:#0d0d0d;color:#f0f0f0;font-family:'Segoe UI',Arial,sans-serif;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+
 /* HEADER */
-header{height:52px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 16px;flex-shrink:0;gap:12px}
-header h1{font-size:17px;font-weight:700;background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
-.header-controls{display:flex;gap:6px;align-items:center}
-.btn{background:var(--panel);border:1px solid var(--border);color:var(--text);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;display:flex;align-items:center;gap:5px;white-space:nowrap;transition:all .15s}
-.btn:hover{border-color:var(--accent);background:#1e2a3a}
-.btn.danger{border-color:var(--red);color:var(--red)}
-.btn.danger:hover{background:#2a1a1a}
-.btn.success{border-color:var(--green);color:var(--green)}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.primary:hover{background:#2563eb}
-#recBtn.recording{background:var(--red);border-color:var(--red);color:#fff;animation:pulse 1s infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+header{height:50px;background:#161616;border-bottom:1px solid #2a2a2a;display:flex;align-items:center;gap:10px;padding:0 14px;flex-shrink:0}
+header h1{font-size:15px;font-weight:700;color:#fff;margin-right:6px}
+.hbtn{background:#222;border:1px solid #333;color:#ddd;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;white-space:nowrap;transition:background .1s}
+.hbtn:hover{background:#2c2c2c}
+.hbtn.play{background:#1a3a1a;border-color:#2d6a2d;color:#6fef6f}
+.hbtn.rec{background:#3a1a1a;border-color:#7a2a2a;color:#ef6f6f}
+.hbtn.rec.active{animation:recpulse 1s infinite}
+@keyframes recpulse{0%,100%{background:#5a1a1a}50%{background:#2a1a1a}}
+.spacer{flex:1}
+#fpsLabel{font-size:11px;color:#555;min-width:42px}
+
 /* LAYOUT */
-#app{display:flex;flex:1;overflow:hidden}
-#sidebar{width:300px;min-width:220px;max-width:420px;background:var(--surface);border-right:1px solid var(--border);overflow-y:auto;flex-shrink:0;resize:horizontal}
-#workspace{flex:1;display:flex;flex-direction:column;overflow:hidden}
-/* TABS */
-.tabs{display:flex;border-bottom:1px solid var(--border);background:var(--panel);flex-shrink:0}
-.tab{padding:8px 14px;cursor:pointer;font-size:12px;color:var(--muted);border-bottom:2px solid transparent;transition:all .15s}
-.tab.active{color:var(--accent);border-color:var(--accent)}
-.tab-panel{display:none;padding:12px;flex-direction:column;gap:10px}
-.tab-panel.active{display:flex}
-/* PANEL */
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:8px;padding:12px}
-.panel h3{font-size:13px;font-weight:600;margin-bottom:10px;color:#ccc}
-label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
-input[type=range]{width:100%;accent-color:var(--accent);height:4px;border-radius:2px}
-input[type=color]{width:100%;height:32px;border:1px solid var(--border);border-radius:6px;background:none;cursor:pointer;padding:2px}
-input[type=text],input[type=number],select,textarea{width:100%;background:#0f0f0f;border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px}
-textarea{height:60px;resize:vertical;font-family:inherit}
-select{cursor:pointer}
-input[type=range]::-webkit-slider-thumb{cursor:pointer}
-.row{display:flex;gap:8px;align-items:center}
-.row label{margin:0;white-space:nowrap}
-.val{font-size:12px;color:var(--accent);min-width:30px;text-align:right}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-/* PREVIEW */
-#previewWrap{flex:1;background:#000;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:200px}
-canvas{max-width:100%;max-height:100%;border:1px solid #333;display:block}
-#recBadge{position:absolute;top:12px;right:12px;background:var(--red);color:#fff;padding:5px 12px;border-radius:20px;font-size:12px;font-weight:700;display:none;animation:pulse 1s infinite}
-#timecode{position:absolute;bottom:12px;right:12px;font-size:11px;color:#666;font-family:monospace;background:rgba(0,0,0,.6);padding:3px 8px;border-radius:4px}
-/* TIMELINE */
-#timeline{height:220px;background:#080808;border-top:1px solid var(--border);flex-shrink:0;display:flex;flex-direction:column}
-#tl-header{display:flex;align-items:center;gap:8px;padding:6px 12px;border-bottom:1px solid var(--border);flex-shrink:0}
-#tl-header span{font-size:12px;font-weight:600;color:var(--muted)}
-#playhead-wrap{position:relative;flex:1;overflow:hidden}
-#tracks-container{display:flex;flex-direction:column;height:100%;overflow:hidden}
-.track{display:flex;align-items:center;height:46px;border-bottom:1px solid var(--border);flex-shrink:0}
-.track-label{width:80px;padding:0 8px;font-size:11px;color:var(--muted);flex-shrink:0;border-right:1px solid var(--border)}
-.track-lane{flex:1;position:relative;height:100%;overflow:hidden}
-.clip{position:absolute;top:6px;height:32px;border-radius:5px;cursor:grab;display:flex;align-items:center;padding:0 8px;font-size:11px;user-select:none;border:1px solid rgba(255,255,255,.1);transition:opacity .15s}
-.clip:active{cursor:grabbing;opacity:.7}
-.clip.video{background:#1e3a5f;color:#93c5fd}
-.clip.text{background:#2d1b4e;color:#c4b5fd}
-.clip.audio{background:#1a3a2a;color:#86efac}
-.clip.fx{background:#3a2a1a;color:#fed7aa}
-#playhead{position:absolute;top:0;bottom:0;width:2px;background:var(--accent);pointer-events:none;z-index:10}
-#tl-ruler{height:20px;background:var(--panel);border-bottom:1px solid var(--border);position:relative;flex-shrink:0}
-/* SCENES */
-#scenes-bar{height:90px;background:var(--panel);border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;padding:0 12px;overflow-x:auto;flex-shrink:0}
-.scene-thumb{min-width:120px;height:68px;border:2px solid var(--border);border-radius:7px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;background:var(--surface);position:relative;flex-shrink:0;transition:border-color .15s}
-.scene-thumb:hover{border-color:#555}
-.scene-thumb.active{border-color:var(--green)}
-.scene-thumb canvas{border-radius:4px}
-.scene-label{position:absolute;bottom:4px;left:6px;font-size:10px;color:var(--muted)}
-.add-scene{border-style:dashed;color:var(--muted)}
-.add-scene:hover{color:var(--text);border-color:var(--accent)}
-/* MEDIA LIBRARY */
-.media-item{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:6px;font-size:12px;background:#0f0f0f;cursor:pointer;border:1px solid transparent}
-.media-item:hover{border-color:var(--border)}
-.media-icon{font-size:16px;flex-shrink:0}
-/* FX CHAIN */
-.fx-slot{background:#0f0f0f;border:1px solid var(--border);border-radius:6px;padding:8px;display:flex;align-items:center;justify-content:space-between;font-size:12px}
-.fx-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
-.fx-dot.off{background:var(--muted)}
-/* SCROLLBAR */
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:#333;border-radius:3px}
-/* AUDIO VIZ */
-#vumeter{display:flex;gap:2px;align-items:flex-end;height:40px;padding:4px 0}
-.vu-bar{width:8px;border-radius:2px;background:var(--green);transition:height .05s}
-/* KEYFRAME EDITOR */
-.kf-row{display:flex;align-items:center;gap:6px;font-size:12px;padding:4px 0;border-bottom:1px solid #1e1e1e}
-.kf-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);flex-shrink:0;cursor:pointer}
-.kf-name{color:var(--muted);width:90px;flex-shrink:0}
-.kf-val{color:var(--accent);width:40px;text-align:right}
-/* Color stops */
-.gradient-stop{display:flex;align-items:center;gap:6px;margin-bottom:4px}
-/* Waveform canvas */
-#waveformCanvas{width:100%;height:32px;border-radius:4px;background:#0a0a0a;border:1px solid var(--border)}
+#layout{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+#sidebar{width:260px;background:#111;border-right:1px solid #222;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+.sidebar-scroll{flex:1;overflow-y:auto;padding:10px}
+.sidebar-scroll::-webkit-scrollbar{width:4px}.sidebar-scroll::-webkit-scrollbar-thumb{background:#2a2a2a;border-radius:2px}
+
+/* SECTION */
+.sec{margin-bottom:12px}
+.sec-head{font-size:11px;font-weight:700;color:#555;letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;padding-left:2px}
+.row{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+label.lbl{font-size:11px;color:#777;white-space:nowrap;min-width:56px}
+input[type=range]{flex:1;accent-color:#3b82f6;height:3px}
+input[type=color]{width:32px;height:24px;border:1px solid #333;border-radius:4px;background:none;cursor:pointer;padding:0}
+input[type=text],select,textarea{width:100%;background:#0a0a0a;border:1px solid #252525;color:#e0e0e0;border-radius:5px;padding:6px 8px;font-size:12px;margin-bottom:4px}
+textarea{height:50px;resize:none}
+.val{font-size:11px;color:#3b82f6;min-width:26px;text-align:right}
+.sbtn{background:#1a1a1a;border:1px solid #2a2a2a;color:#ccc;padding:5px 0;border-radius:5px;cursor:pointer;font-size:11px;flex:1;text-align:center;transition:all .1s}
+.sbtn:hover{border-color:#3b82f6;color:#fff}
+.sbtn.on{background:#1a2a3a;border-color:#3b82f6;color:#93c5fd}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:4px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px;margin-bottom:4px}
+
+/* LOGO ANIM CARDS */
+.anim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:4px}
+.anim-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:6px;cursor:pointer;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;transition:all .15s}
+.anim-card:hover{border-color:#4a4a4a}
+.anim-card.sel{border-color:#3b82f6;background:#0d1a2e}
+.anim-card canvas{width:54px;height:54px;border-radius:3px;background:#0a0a0a}
+.anim-card span{font-size:9px;color:#666}
+.anim-card.sel span{color:#93c5fd}
+
+/* MAIN CANVAS AREA */
+#main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:#0a0a0a}
+#canvasWrap{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+#mainCanvas{background:#111;border:1px solid #222;display:block;max-width:100%;max-height:100%}
+#timecodeBox{position:absolute;bottom:8px;right:10px;font-size:11px;color:#444;font-family:monospace;background:rgba(0,0,0,.5);padding:2px 7px;border-radius:4px;pointer-events:none}
+
+/* SCENES STRIP */
+#scenesStrip{height:80px;background:#0e0e0e;border-top:1px solid #1e1e1e;display:flex;align-items:center;gap:7px;padding:0 10px;overflow-x:auto;flex-shrink:0}
+#scenesStrip::-webkit-scrollbar{height:3px}.#scenesStrip::-webkit-scrollbar-thumb{background:#2a2a2a}
+.scene-card{position:relative;min-width:110px;height:62px;border-radius:6px;border:2px solid #2a2a2a;cursor:pointer;overflow:hidden;flex-shrink:0;transition:border-color .15s}
+.scene-card canvas{width:100%;height:100%;display:block}
+.scene-card:hover{border-color:#444}
+.scene-card.active{border-color:#3b82f6}
+.scene-label{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.7);font-size:9px;text-align:center;padding:2px;color:#aaa}
+.scene-del{position:absolute;top:2px;right:3px;color:#f55;font-size:10px;cursor:pointer;display:none}
+.scene-card:hover .scene-del{display:block}
+.add-scene-btn{min-width:60px;height:62px;border-radius:6px;border:1px dashed #2a2a2a;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#3a3a3a;font-size:22px;flex-shrink:0;transition:all .15s}
+.add-scene-btn:hover{border-color:#3b82f6;color:#3b82f6}
+
+/* AUDIO METER */
+#meter{display:flex;gap:1px;align-items:flex-end;height:28px;padding:4px 0}
+.mbar{width:7px;background:#22c55e;border-radius:1px;transition:height .05s}
+
+/* UPLOAD ZONE */
+.drop-zone{border:1px dashed #2a2a2a;border-radius:6px;padding:10px;text-align:center;font-size:11px;color:#444;cursor:pointer;margin-bottom:6px;transition:border-color .15s}
+.drop-zone:hover{border-color:#3b82f6;color:#777}
+.drop-zone input{display:none}
 </style>
 </head>
 <body>
 
 <header>
-  <h1>⬡ NovaMotion Ultimate Studio</h1>
-  <div class="header-controls">
-    <button class="btn" onclick="setTime(0)">⏮</button>
-    <button class="btn success" id="playBtn" onclick="togglePlay()">▶ Lecture</button>
-    <button class="btn" id="recBtn" onclick="toggleRecord()">⏺ REC</button>
-    <button class="btn" onclick="exportFrame()">📷 PNG</button>
-    <button class="btn" onclick="exportVideo()">🎬 Exporter</button>
-    <span id="fpsDisplay" style="font-size:12px;color:var(--muted);min-width:50px">-- fps</span>
-    <select style="background:var(--panel);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px 8px;font-size:12px" onchange="changeResolution(this.value)">
-      <option value="1280,720">1280×720</option>
-      <option value="1920,1080">1920×1080</option>
-      <option value="854,480">854×480</option>
-      <option value="720,720">720×720 (Carré)</option>
-      <option value="1080,1920">1080×1920 (Portrait)</option>
-    </select>
-  </div>
+  <h1>⬡ NovaMotion</h1>
+  <button class="hbtn play" id="playBtn" onclick="togglePlay()">▶ Lire</button>
+  <button class="hbtn rec" id="recBtn" onclick="toggleRec()">⏺ REC</button>
+  <button class="hbtn" onclick="exportPNG()">📷 PNG</button>
+  <button class="hbtn" onclick="exportWEBM()">🎬 Exporter</button>
+  <div class="spacer"></div>
+  <span id="fpsLabel">60 fps</span>
 </header>
 
-<div id="app">
+<div id="layout">
+
   <!-- SIDEBAR -->
   <div id="sidebar">
-    <div class="tabs">
-      <div class="tab active" onclick="showTab('text')">Texte</div>
-      <div class="tab" onclick="showTab('media')">Média</div>
-      <div class="tab" onclick="showTab('fx')">FX</div>
-      <div class="tab" onclick="showTab('audio')">Audio</div>
-      <div class="tab" onclick="showTab('kf')">Keyframes</div>
-    </div>
+    <div class="sidebar-scroll">
 
-    <!-- TEXTE -->
-    <div class="tab-panel active" id="tab-text">
-      <div class="panel">
-        <h3>Texte</h3>
-        <label>Contenu</label>
-        <textarea id="textInput">Bienvenue sur NovaMotion</textarea>
-        <label style="margin-top:8px">Police</label>
-        <select id="fontFamily">
-          <option>Arial</option><option>Impact</option><option>Georgia</option>
-          <option>Courier New</option><option>Trebuchet MS</option><option>Verdana</option>
-        </select>
-        <div class="row" style="margin-top:8px">
-          <label>Taille</label>
-          <input type="range" id="fontSize" min="12" max="150" value="60" oninput="document.getElementById('fsVal').textContent=this.value">
-          <span class="val" id="fsVal">60</span>
+      <!-- LOGO / ANIMATION -->
+      <div class="sec">
+        <div class="sec-head">Animation logo</div>
+        <div class="anim-grid" id="animGrid"></div>
+      </div>
+
+      <!-- TEXTE -->
+      <div class="sec">
+        <div class="sec-head">Texte</div>
+        <textarea id="txtContent" placeholder="Votre texte…">Mon Logo</textarea>
+        <div class="row">
+          <label class="lbl">Police</label>
+          <select id="txtFont" style="flex:1">
+            <option>Arial Black</option><option>Impact</option><option>Georgia</option>
+            <option>Courier New</option><option>Trebuchet MS</option><option>Verdana</option>
+          </select>
         </div>
         <div class="row">
-          <label>Opacité</label>
-          <input type="range" id="textOpacity" min="0" max="100" value="100" oninput="document.getElementById('toVal').textContent=this.value+'%'">
-          <span class="val" id="toVal">100%</span>
+          <label class="lbl">Taille</label>
+          <input type="range" id="txtSize" min="14" max="160" value="72" step="1" oninput="tsv.textContent=this.value;syncAll()">
+          <span class="val" id="tsv">72</span>
         </div>
-        <div class="grid2" style="margin-top:8px">
-          <div>
-            <label>Couleur</label>
-            <input type="color" id="textColor" value="#ffffff">
-          </div>
-          <div>
-            <label>Ombre</label>
-            <input type="color" id="shadowColor" value="#000000">
-          </div>
+        <div class="row">
+          <label class="lbl">Couleur</label>
+          <input type="color" id="txtColor" value="#ffffff" oninput="syncAll()">
+          <label class="lbl" style="margin-left:8px">Fond</label>
+          <input type="color" id="bgColor" value="#0a0a0a" oninput="syncAll()">
         </div>
-        <div class="row" style="margin-top:6px">
-          <label>Flou ombre</label>
-          <input type="range" id="shadowBlur" min="0" max="30" value="6">
-          <span class="val">6</span>
+        <div class="row">
+          <label class="lbl">X</label>
+          <input type="range" id="txtX" min="0" max="100" value="50" step="1" oninput="syncAll()">
+          <label class="lbl">Y</label>
+          <input type="range" id="txtY" min="0" max="100" value="50" step="1" oninput="syncAll()">
         </div>
-        <label style="margin-top:8px">Position X</label>
-        <input type="range" id="textX" min="0" max="1280" value="80" oninput="syncText()">
-        <label>Position Y</label>
-        <input type="range" id="textY" min="0" max="720" value="100" oninput="syncText()">
-        <label style="margin-top:8px">Animation texte</label>
-        <select id="textAnim">
-          <option value="none">Aucune</option>
-          <option value="typewriter">Machine à écrire</option>
-          <option value="glitch">Glitch</option>
-          <option value="wave">Vague</option>
-          <option value="bounce">Bounce</option>
-          <option value="fade">Fade In</option>
-          <option value="slide">Slide In</option>
-          <option value="neon">Neon Glow</option>
-          <option value="rainbow">Arc-en-ciel</option>
-          <option value="explode">Explosion</option>
-        </select>
-        <div class="grid2" style="margin-top:8px">
-          <button class="btn primary" onclick="applyText()">✓ Appliquer</button>
-          <button class="btn" onclick="addTextLayer()">+ Couche</button>
+        <div class="row">
+          <label class="lbl">Animation</label>
+          <select id="txtAnim" style="flex:1" onchange="syncAll()">
+            <option value="none">Aucune</option>
+            <option value="typewriter">Machine à écrire</option>
+            <option value="wave">Vague</option>
+            <option value="glitch">Glitch</option>
+            <option value="rainbow">Arc-en-ciel</option>
+            <option value="neon">Néon</option>
+          </select>
         </div>
       </div>
 
-      <div class="panel">
-        <h3>Fond</h3>
-        <label>Type</label>
-        <select id="bgType" onchange="updateBgType()">
-          <option value="solid">Couleur unie</option>
-          <option value="gradient">Dégradé</option>
-          <option value="pattern">Motif</option>
-          <option value="animated">Fond animé</option>
-        </select>
-        <div id="bgSolid" style="margin-top:8px">
-          <input type="color" id="bgColor" value="#111111">
-        </div>
-        <div id="bgGradient" style="display:none;margin-top:8px">
-          <div class="gradient-stop">
-            <input type="color" id="grad1" value="#0a0a2e">
-            <input type="range" id="grad1p" min="0" max="100" value="0" style="flex:1">
-          </div>
-          <div class="gradient-stop">
-            <input type="color" id="grad2" value="#1a0533">
-            <input type="range" id="grad2p" min="0" max="100" value="50" style="flex:1">
-          </div>
-          <div class="gradient-stop">
-            <input type="color" id="grad3" value="#000f33">
-            <input type="range" id="grad3p" min="0" max="100" value="100" style="flex:1">
-          </div>
-          <label>Angle</label>
-          <input type="range" id="gradAngle" min="0" max="360" value="135">
-        </div>
-        <div id="bgPattern" style="display:none;margin-top:8px">
-          <select id="patternType">
+      <!-- FOND -->
+      <div class="sec">
+        <div class="sec-head">Fond</div>
+        <div class="row">
+          <label class="lbl">Type</label>
+          <select id="bgType" style="flex:1" onchange="syncAll()">
+            <option value="solid">Uni</option>
+            <option value="gradient">Dégradé</option>
             <option value="grid">Grille</option>
             <option value="dots">Points</option>
-            <option value="hex">Hexagones</option>
-            <option value="stripes">Rayures</option>
-          </select>
-          <input type="color" id="patternColor" value="#1a2a1a" style="margin-top:6px">
-        </div>
-        <div id="bgAnimated" style="display:none;margin-top:8px">
-          <select id="bgAnimType">
             <option value="particles">Particules</option>
             <option value="waves">Vagues</option>
-            <option value="matrix">Matrix</option>
-            <option value="aurora">Aurore</option>
-            <option value="plasma">Plasma</option>
           </select>
         </div>
-        <button class="btn primary" style="width:100%;margin-top:8px" onclick="applyBackground()">Appliquer fond</button>
-      </div>
-    </div>
-
-    <!-- MEDIA -->
-    <div class="tab-panel" id="tab-media">
-      <div class="panel">
-        <h3>Importer</h3>
-        <input type="file" id="imageLoader" accept="image/*" style="font-size:12px;width:100%;color:var(--muted)">
-        <div style="margin-top:8px">
-          <label>Position X</label>
-          <input type="range" id="imgX" min="0" max="1280" value="640" oninput="syncImg()">
-          <label>Position Y</label>
-          <input type="range" id="imgY" min="0" max="720" value="360" oninput="syncImg()">
-          <label>Échelle</label>
-          <input type="range" id="imgScale" min="10" max="300" value="100" oninput="syncImg()">
-          <label>Rotation</label>
-          <input type="range" id="imgRot" min="-180" max="180" value="0" oninput="syncImg()">
-          <label>Opacité</label>
-          <input type="range" id="imgOpacity" min="0" max="100" value="100" oninput="syncImg()">
+        <div class="row">
+          <label class="lbl">Couleur 2</label>
+          <input type="color" id="bg2Color" value="#1a1a2e" oninput="syncAll()">
         </div>
-        <h3 style="margin-top:12px">Animation image</h3>
+      </div>
+
+      <!-- EFFETS -->
+      <div class="sec">
+        <div class="sec-head">Effets</div>
         <div class="grid3">
-          <button class="btn" onclick="spinImage()">↻ Spin</button>
-          <button class="btn" onclick="flashImage()">⚡ Flash</button>
-          <button class="btn" onclick="bounceImage()">↕ Bounce</button>
-          <button class="btn" onclick="pulseImage()">◎ Pulse</button>
-          <button class="btn" onclick="shakeImage()">≈ Shake</button>
-          <button class="btn" onclick="floatImage()">⇡ Float</button>
+          <button class="sbtn" id="btnSnow" onclick="toggleFX('snow',this)">❄ Neige</button>
+          <button class="sbtn" id="btnFW" onclick="toggleFX('fireworks',this)">★ Feux</button>
+          <button class="sbtn" id="btnRain" onclick="toggleFX('rain',this)">~ Pluie</button>
+          <button class="sbtn" id="btnSpark" onclick="toggleFX('sparks',this)">✦ Étincelles</button>
+          <button class="sbtn" id="btnLens" onclick="toggleFX('lens',this)">◎ Lens flare</button>
+          <button class="sbtn" id="btnClear" onclick="clearFX()">✕ Effacer</button>
+        </div>
+        <div class="row">
+          <label class="lbl">Vignette</label>
+          <input type="range" id="vigAmt" min="0" max="1" value="0" step=".01" oninput="syncAll()">
         </div>
       </div>
-      <div class="panel">
-        <h3>Bibliothèque de médias</h3>
-        <div id="mediaLibrary" style="display:flex;flex-direction:column;gap:5px"></div>
-        <div style="margin-top:8px;font-size:11px;color:var(--muted)">0 fichier(s) importé(s)</div>
-      </div>
-    </div>
 
-    <!-- FX -->
-    <div class="tab-panel" id="tab-fx">
-      <div class="panel">
-        <h3>Effets visuels</h3>
-        <label>Transition</label>
-        <select id="transitionType">
-          <option>Fade</option><option>Slide Left</option><option>Slide Right</option>
-          <option>Zoom In</option><option>Zoom Out</option><option>Flash</option>
-          <option>Blur</option><option>Wipe</option><option>Spiral</option>
-          <option>Pixel Dissolve</option>
+      <!-- AUDIO -->
+      <div class="sec">
+        <div class="sec-head">Musique</div>
+        <div class="drop-zone" onclick="document.getElementById('audioFile').click()">
+          Cliquer pour importer un audio
+          <input type="file" id="audioFile" accept="audio/*" onchange="loadAudio(this)">
+        </div>
+        <div id="audioPlayer"></div>
+        <div class="row">
+          <label class="lbl">Volume</label>
+          <input type="range" id="volRange" min="0" max="1" value="0.8" step=".01" oninput="setVol(this.value)">
+        </div>
+        <div id="meter"></div>
+      </div>
+
+      <!-- LOGO IMAGE -->
+      <div class="sec">
+        <div class="sec-head">Logo / Image</div>
+        <div class="drop-zone" onclick="document.getElementById('imgFile').click()">
+          Importer image ou logo
+          <input type="file" id="imgFile" accept="image/*" onchange="loadImg(this)">
+        </div>
+        <div id="imgControls" style="display:none">
+          <div class="row"><label class="lbl">X</label><input type="range" id="imgX" min="0" max="100" value="50" step="1" oninput="syncAll()"><label class="lbl">Y</label><input type="range" id="imgY" min="0" max="100" value="50" step="1" oninput="syncAll()"></div>
+          <div class="row"><label class="lbl">Taille</label><input type="range" id="imgScale" min="5" max="200" value="40" step="1" oninput="syncAll()"></div>
+          <div class="row"><label class="lbl">Rotation</label><input type="range" id="imgRot" min="-180" max="180" value="0" step="1" oninput="syncAll()"></div>
+          <div class="row"><label class="lbl">Anim logo</label>
+            <select id="imgAnim" style="flex:1" onchange="syncAll()">
+              <option value="none">Aucune</option>
+              <option value="spin">Rotation</option>
+              <option value="float">Lévitation</option>
+              <option value="pulse">Pulse</option>
+              <option value="bounce">Rebond</option>
+              <option value="shake">Secousse</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- RESOLUTION -->
+      <div class="sec">
+        <div class="sec-head">Format</div>
+        <select style="width:100%" onchange="setRes(this.value)">
+          <option value="1280,720">1280 × 720 (16:9)</option>
+          <option value="1920,1080">1920 × 1080 (Full HD)</option>
+          <option value="720,720">720 × 720 (Carré)</option>
+          <option value="1080,1920">1080 × 1920 (Portrait)</option>
+          <option value="854,480">854 × 480 (SD)</option>
         </select>
-        <div class="row" style="margin-top:8px">
-          <label>Durée (ms)</label>
-          <input type="number" id="transDuration" value="800" style="width:70px;flex-shrink:0">
-        </div>
-        <button class="btn primary" style="width:100%;margin-top:6px" onclick="applyTransition()">Appliquer transition</button>
       </div>
 
-      <div class="panel">
-        <h3>Post-traitement</h3>
-        <div class="fx-slot" id="fxBrightness">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot"></div><span>Luminosité</span></div>
-          <input type="range" min="-100" max="100" value="0" style="width:80px" oninput="applyFX()">
-        </div>
-        <div class="fx-slot" id="fxContrast" style="margin-top:5px">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot"></div><span>Contraste</span></div>
-          <input type="range" min="-100" max="100" value="0" style="width:80px" oninput="applyFX()">
-        </div>
-        <div class="fx-slot" id="fxSaturation" style="margin-top:5px">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot"></div><span>Saturation</span></div>
-          <input type="range" min="-100" max="100" value="0" style="width:80px" oninput="applyFX()">
-        </div>
-        <div class="fx-slot" id="fxVignette" style="margin-top:5px">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="vigDot"></div><span>Vignette</span></div>
-          <input type="range" min="0" max="100" value="0" style="width:80px" id="vigAmt" oninput="document.getElementById('vigDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
-        </div>
-        <div class="fx-slot" id="fxChromo" style="margin-top:5px">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="chromoDot"></div><span>Aberration chromatique</span></div>
-          <input type="range" min="0" max="20" value="0" style="width:80px" id="chromoAmt" oninput="document.getElementById('chromoDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
-        </div>
-        <div class="fx-slot" id="fxNoise" style="margin-top:5px">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="noiseDot"></div><span>Grain / Bruit</span></div>
-          <input type="range" min="0" max="60" value="0" style="width:80px" id="noiseAmt" oninput="document.getElementById('noiseDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
-        </div>
-        <div class="fx-slot" id="fxScanlines" style="margin-top:5px">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="slDot"></div><span>Scanlines</span></div>
-          <input type="range" min="0" max="100" value="0" style="width:80px" id="slAmt" oninput="document.getElementById('slDot').className='fx-dot'+(this.value>0?'':' off');applyFX()">
-        </div>
-        <div class="fx-slot" id="fxPixel" style="margin-top:5px">
-          <div style="display:flex;align-items:center;gap:8px"><div class="fx-dot off" id="pixDot"></div><span>Pixelisation</span></div>
-          <input type="range" min="1" max="40" value="1" style="width:80px" id="pixAmt" oninput="document.getElementById('pixDot').className='fx-dot'+(this.value>1?'':' off');applyFX()">
-        </div>
-      </div>
-
-      <div class="panel">
-        <h3>Particules & Overlays</h3>
-        <div class="grid2">
-          <button class="btn" onclick="toggleParticles()">✦ Particules</button>
-          <button class="btn" onclick="toggleSnow()">❄ Neige</button>
-          <button class="btn" onclick="toggleRain()">〰 Pluie</button>
-          <button class="btn" onclick="toggleFireworks()">★ Feux d'artifice</button>
-          <button class="btn" onclick="toggleLightning()">⚡ Éclair</button>
-          <button class="btn" onclick="clearOverlays()">✕ Effacer</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- AUDIO -->
-    <div class="tab-panel" id="tab-audio">
-      <div class="panel">
-        <h3>Importer musique</h3>
-        <input type="file" id="musicLoader" accept="audio/*" style="font-size:12px;width:100%;color:var(--muted)">
-        <canvas id="waveformCanvas" style="margin-top:8px"></canvas>
-        <div id="audioBox" style="margin-top:8px"></div>
-        <label style="margin-top:8px">Volume master</label>
-        <input type="range" id="masterVol" min="0" max="100" value="80" oninput="setMasterVol(this.value)">
-        <label style="margin-top:8px">Fondu d'entrée (ms)</label>
-        <input type="range" id="fadeIn" min="0" max="5000" value="0" step="100">
-        <label>Fondu de sortie (ms)</label>
-        <input type="range" id="fadeOut" min="0" max="5000" value="0" step="100">
-        <div style="margin-top:10px">
-          <label>Analyseur audio</label>
-          <div id="vumeter"></div>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Effets audio</h3>
-        <div class="fx-slot" style="margin-bottom:5px">
-          <span>Réverb</span>
-          <input type="range" id="reverbAmt" min="0" max="100" value="0" style="width:80px" oninput="updateAudioFX()">
-        </div>
-        <div class="fx-slot" style="margin-bottom:5px">
-          <span>Echo</span>
-          <input type="range" id="echoAmt" min="0" max="100" value="0" style="width:80px" oninput="updateAudioFX()">
-        </div>
-        <div class="fx-slot">
-          <span>Pitch</span>
-          <input type="range" id="pitchAmt" min="-12" max="12" value="0" style="width:80px" oninput="updateAudioFX()">
-        </div>
-        <h3 style="margin-top:12px">Égaliseur 5 bandes</h3>
-        <div style="display:flex;gap:6px;align-items:flex-end;height:80px">
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="80" oninput="updateEQ()">
-            <span style="font-size:10px;color:var(--muted)">80Hz</span>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="250" oninput="updateEQ()">
-            <span style="font-size:10px;color:var(--muted)">250Hz</span>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="1000" oninput="updateEQ()">
-            <span style="font-size:10px;color:var(--muted)">1kHz</span>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="4000" oninput="updateEQ()">
-            <span style="font-size:10px;color:var(--muted)">4kHz</span>
-          </div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:4px;flex:1">
-            <input type="range" min="-12" max="12" value="0" class="eq-band" style="writing-mode:vertical-rl;height:60px;transform:rotate(180deg)" data-freq="16000" oninput="updateEQ()">
-            <span style="font-size:10px;color:var(--muted)">16kHz</span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- KEYFRAMES -->
-    <div class="tab-panel" id="tab-kf">
-      <div class="panel">
-        <h3>Éditeur de keyframes</h3>
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Temps: <span id="kfTime">0.00s</span></div>
-        <div id="kfList" style="display:flex;flex-direction:column;gap:2px"></div>
-        <button class="btn primary" style="width:100%;margin-top:8px" onclick="addKeyframe()">+ Ajouter keyframe au temps actuel</button>
-        <div id="kfTimeline" style="height:60px;background:#0a0a0a;border:1px solid var(--border);border-radius:6px;position:relative;margin-top:8px;overflow:hidden">
-          <canvas id="kfCanvas" style="width:100%;height:100%"></canvas>
-        </div>
-      </div>
-      <div class="panel">
-        <h3>Courbes d'interpolation</h3>
-        <select id="easingType">
-          <option value="linear">Linéaire</option>
-          <option value="easeIn">Ease In</option>
-          <option value="easeOut">Ease Out</option>
-          <option value="easeInOut">Ease In-Out</option>
-          <option value="bounce">Bounce</option>
-          <option value="elastic">Élastique</option>
-        </select>
-        <canvas id="curveCanvas" width="200" height="100" style="width:100%;margin-top:8px;border:1px solid var(--border);border-radius:6px;background:#0a0a0a"></canvas>
-      </div>
     </div>
   </div>
 
-  <!-- WORKSPACE -->
-  <div id="workspace">
-    <div id="previewWrap">
-      <div id="recBadge">● REC</div>
-      <span id="timecode">00:00:00</span>
-      <canvas id="canvas" width="1280" height="720"></canvas>
+  <!-- MAIN -->
+  <div id="main">
+    <div id="canvasWrap">
+      <canvas id="mainCanvas" width="1280" height="720"></canvas>
+      <div id="timecodeBox">00:00:00</div>
     </div>
-
-    <!-- TIMELINE -->
-    <div id="timeline">
-      <div id="tl-header">
-        <span>Timeline</span>
-        <div style="flex:1"></div>
-        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="zoomTL(-1)">−</button>
-        <span id="tlZoomLabel" style="font-size:11px;color:var(--muted);min-width:30px;text-align:center">1×</span>
-        <button class="btn" style="padding:4px 8px;font-size:11px" onclick="zoomTL(1)">+</button>
-        <span id="tlDuration" style="font-size:11px;color:var(--muted)">Durée: 30s</span>
-      </div>
-      <div id="tl-ruler"><canvas id="rulerCanvas" style="width:100%;height:20px"></canvas></div>
-      <div id="tracks-container">
-        <div class="track">
-          <div class="track-label">Vidéo</div>
-          <div class="track-lane" id="laneVideo">
-            <div class="clip video" style="left:0;width:200px" draggable="true">Scène 1</div>
-            <div class="clip video" style="left:210px;width:150px" draggable="true">Scène 2</div>
-          </div>
-        </div>
-        <div class="track">
-          <div class="track-label">Texte</div>
-          <div class="track-lane" id="laneText">
-            <div class="clip text" style="left:0;width:300px" draggable="true">Titre principal</div>
-          </div>
-        </div>
-        <div class="track">
-          <div class="track-label">FX</div>
-          <div class="track-lane" id="laneFX">
-            <div class="clip fx" style="left:190px;width:30px" draggable="true">Fade</div>
-          </div>
-        </div>
-        <div class="track">
-          <div class="track-label">Audio</div>
-          <div class="track-lane" id="laneAudio">
-            <div class="clip audio" style="left:0;width:400px" id="audioClip">Musique</div>
-          </div>
-        </div>
-      </div>
-      <div id="playhead" style="left:80px"></div>
-    </div>
-
-    <!-- SCENES -->
-    <div id="scenes-bar">
-      <div class="scene-thumb active" id="scene-0" onclick="selectScene(0)">
-        <canvas width="110" height="62" id="thumb-0"></canvas>
-        <div class="scene-label">Scène 1</div>
-      </div>
-      <div class="scene-thumb" id="scene-1" onclick="selectScene(1)">
-        <canvas width="110" height="62" id="thumb-1"></canvas>
-        <div class="scene-label">Scène 2</div>
-      </div>
-      <div class="scene-thumb add-scene" onclick="addScene()">
-        <div style="font-size:20px;color:var(--muted)">+</div>
-        <div class="scene-label">Nouvelle scène</div>
-      </div>
+    <div id="scenesStrip">
+      <!-- Scènes injectées par JS -->
+      <div class="add-scene-btn" onclick="addScene()" title="Nouvelle scène">+</div>
     </div>
   </div>
 </div>
 
 <script>
-// ============================================================
-// STATE
-// ============================================================
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
+// ─────────────────────────────────────────────
+// ÉTAT GLOBAL
+// ─────────────────────────────────────────────
+const C = document.getElementById('mainCanvas');
+const ctx = C.getContext('2d');
 
-let state = {
+let S = {
   playing: false, recording: false,
-  time: 0, duration: 30,
-  fps: 60, lastTime: 0, actualFPS: 0, fpsCount: 0, fpsTimer: 0,
-  currentScene: 0,
-  bgType: 'solid', bgColor: '#111111',
-  grad: { c1:'#0a0a2e',c2:'#1a0533',c3:'#000f33', p1:0,p2:50,p3:100, angle:135 },
-  patternType: 'grid', patternColor: '#1a2a1a',
-  bgAnimType: 'particles',
-  layers: [],
-  activeLayer: null,
-  img: { obj:null, x:640, y:360, scale:100, rot:0, opacity:100,
-         animSpin:false, spinSpeed:0,
-         animBounce:false, bounceY:0, bounceDir:1,
-         animPulse:false, pulsePhase:0,
-         animFloat:false, floatPhase:0,
-         animShake:false, shakeX:0,
-         animFlash:false, flashVisible:true },
-  fx: { brightness:0, contrast:0, saturation:0, vignette:0, chromo:0, noise:0, scanlines:0, pixelSize:1 },
-  particles: [], snowflakes: [], raindrops: [], fireworks: [], lightnings: [],
-  showParticles:false, showSnow:false, showRain:false, showFireworks:false, showLightning:false,
-  transition: { active:false, type:'Fade', progress:0, duration:800 },
-  textLayers: [],
-  keyframes: [],
-  tlZoom: 1,
-  audioCtx: null, analyser: null, gainNode: null, sourceNode: null, audioBuffer: null,
-  reverbNode: null, delayNode: null,
-  eqBands: [],
-  scenes: [{ name:'Scène 1' }, { name:'Scène 2' }],
-  animFrame: 0,
-  mediaRecorder: null, chunks: [],
-  textAnimFrame: 0,
-  glitchOffset: 0,
+  t: 0, frame: 0, lastTS: 0,
+  fpsAccum: 0, fpsCount: 0,
+  bgType: 'solid', bgColor: '#0a0a0a', bg2: '#1a1a2e',
+  txtContent: 'Mon Logo', txtFont: 'Arial Black', txtSize: 72,
+  txtColor: '#ffffff', txtX: 50, txtY: 50, txtAnim: 'none',
+  logoAnim: 'flat_pulse', // selected animation preset
+  imgObj: null, imgX:50, imgY:50, imgScale:40, imgRot:0, imgAnim:'float',
+  vigAmt: 0,
+  fx: { snow:false, fireworks:false, rain:false, sparks:false, lens:false },
+  particles: [], snow:[], rain:[], sparks:[], fireworks:[],
+  lensX: 0, lensPhase: 0,
+  scenes: [], currentScene: 0,
+  audioEl: null, analyser: null, audioCtx: null,
+  mediaRec: null, recChunks: [],
+  matrixCols: null,
 };
 
-// Init default text layer
-state.textLayers.push({
-  text: 'Bienvenue sur NovaMotion',
-  font: 'Arial', size: 60, color: '#ffffff', opacity: 100,
-  x: 80, y: 100, shadow: '#000000', shadowBlur: 6,
-  anim: 'none', animPhase: 0
-});
+// ─────────────────────────────────────────────
+// LOGO ANIMATION PRESETS  (flat, 2d, 3d)
+// ─────────────────────────────────────────────
+const LOGO_ANIMS = [
+  { id:'flat_pulse',  label:'Flat Pulse',  cat:'flat', draw: flatPulse },
+  { id:'flat_hex',    label:'Flat Hex',    cat:'flat', draw: flatHex },
+  { id:'flat_ring',   label:'Flat Ring',   cat:'flat', draw: flatRing },
+  { id:'flat_bars',   label:'Flat Bars',   cat:'flat', draw: flatBars },
+  { id:'flat_tri',    label:'Flat Tri',    cat:'flat', draw: flatTri },
+  { id:'flat_wave',   label:'Flat Wave',   cat:'flat', draw: flatWave },
+  { id:'d2_orbit',    label:'2D Orbite',   cat:'2d',   draw: d2Orbit },
+  { id:'d2_morph',    label:'2D Morphe',   cat:'2d',   draw: d2Morph },
+  { id:'d2_logo',     label:'2D Reveal',   cat:'2d',   draw: d2Reveal },
+  { id:'d3_cube',     label:'3D Cube',     cat:'3d',   draw: d3Cube },
+  { id:'d3_sphere',   label:'3D Sphère',   cat:'3d',   draw: d3Sphere },
+  { id:'d3_dna',      label:'3D DNA',      cat:'3d',   draw: d3DNA },
+];
 
-// ============================================================
-// TABS
-// ============================================================
-function showTab(id) {
-  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active', t.onclick.toString().includes("'"+id+"'")));
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  document.getElementById('tab-'+id).classList.add('active');
+// ── FLAT ANIMATIONS ──────────────────────────
+
+function flatPulse(c2, t, W, H) {
+  const cx=W/2, cy=H/2, p=Math.sin(t*2)*.5+.5;
+  c2.clearRect(0,0,W,H);
+  for(let i=4;i>=0;i--){
+    const r=(30+i*18)*(1+p*.15);
+    c2.beginPath(); c2.arc(cx,cy,r,0,Math.PI*2);
+    c2.fillStyle=`hsla(${210+i*15},80%,${40+p*25}%,${.12+i*.06})`;
+    c2.fill();
+  }
+  c2.beginPath(); c2.arc(cx,cy,22*(1+p*.1),0,Math.PI*2);
+  c2.fillStyle=`hsl(${210+p*30},90%,${60+p*20}%)`;
+  c2.fill();
 }
 
-// ============================================================
-// CANVAS DRAW LOOP
-// ============================================================
-function drawFrame(ts) {
-  // FPS
-  state.fpsCount++;
-  if(ts - state.fpsTimer >= 1000) {
-    state.actualFPS = state.fpsCount;
-    state.fpsCount = 0; state.fpsTimer = ts;
-    document.getElementById('fpsDisplay').textContent = state.actualFPS+' fps';
+function flatHex(c2, t, W, H) {
+  const cx=W/2, cy=H/2;
+  c2.clearRect(0,0,W,H);
+  const r=30, sides=6;
+  for(let ring=0;ring<3;ring++){
+    const rr=r*(ring+1);
+    c2.beginPath();
+    for(let i=0;i<sides;i++){
+      const a=i/sides*Math.PI*2+t*.5+ring*.3;
+      ring===0&&i===0?c2.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):i===0?c2.moveTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a)):c2.lineTo(cx+rr*Math.cos(a),cy+rr*Math.sin(a));
+    }
+    c2.closePath();
+    c2.strokeStyle=`hsl(${200+ring*25},90%,${55+ring*10}%)`;
+    c2.lineWidth=2; c2.stroke();
   }
-  if(state.playing) {
-    const dt = Math.min((ts - state.lastTime)/1000, .1);
-    state.time = Math.min(state.time + dt, state.duration);
-    if(state.time >= state.duration) { state.time = 0; }
-    updateTimecode();
-    updatePlayhead();
-  }
-  state.lastTime = ts;
-  state.animFrame++;
+  c2.beginPath(); c2.arc(cx,cy,12,0,Math.PI*2);
+  c2.fillStyle='#60a5fa'; c2.fill();
+}
 
-  drawBackground();
-  drawOverlays();
-  applyFXLayer();
-  drawImages();
-  drawTextLayers();
-  updateParticles();
-  drawTransition();
+function flatRing(c2, t, W, H) {
+  const cx=W/2, cy=H/2;
+  c2.clearRect(0,0,W,H);
+  const segments=12;
+  for(let i=0;i<segments;i++){
+    const a=i/segments*Math.PI*2+t;
+    const a2=(i+.7)/segments*Math.PI*2+t;
+    const hue=(i/segments*360+t*30)%360;
+    c2.beginPath();
+    c2.arc(cx,cy,36,a,a2);
+    c2.strokeStyle=`hsl(${hue},90%,65%)`;
+    c2.lineWidth=7; c2.stroke();
+  }
+  c2.beginPath(); c2.arc(cx,cy,15,0,Math.PI*2);
+  c2.fillStyle='#fff'; c2.fill();
+}
+
+function flatBars(c2, t, W, H) {
+  c2.clearRect(0,0,W,H);
+  const bars=9, bw=6, gap=4, total=bars*(bw+gap);
+  const ox=W/2-total/2;
+  for(let i=0;i<bars;i++){
+    const h=(Math.sin(t*2+i*.6)*.5+.5)*H*.7+10;
+    const hue=200+i*12;
+    c2.fillStyle=`hsl(${hue},80%,60%)`;
+    c2.fillRect(ox+i*(bw+gap), H/2-h/2, bw, h);
+  }
+}
+
+function flatTri(c2, t, W, H) {
+  const cx=W/2, cy=H/2;
+  c2.clearRect(0,0,W,H);
+  for(let k=0;k<3;k++){
+    const angle=t*(.5+k*.3);
+    const r=20+k*14;
+    c2.save(); c2.translate(cx,cy); c2.rotate(angle);
+    c2.beginPath();
+    for(let i=0;i<3;i++){
+      const a=i/3*Math.PI*2-Math.PI/2;
+      i===0?c2.moveTo(r*Math.cos(a),r*Math.sin(a)):c2.lineTo(r*Math.cos(a),r*Math.sin(a));
+    }
+    c2.closePath();
+    c2.strokeStyle=`hsl(${180+k*40},85%,60%)`; c2.lineWidth=2+k*.5; c2.stroke();
+    c2.restore();
+  }
+}
+
+function flatWave(c2, t, W, H) {
+  c2.clearRect(0,0,W,H);
+  const cy=H/2;
+  for(let w=0;w<4;w++){
+    c2.beginPath();
+    for(let x=0;x<=W;x+=2){
+      const y=cy+Math.sin(x/12+t*(1+w*.4)+w)*12*(1+w*.5);
+      x===0?c2.moveTo(x,y):c2.lineTo(x,y);
+    }
+    c2.strokeStyle=`hsla(${210+w*20},85%,${55+w*8}%,${.8-w*.15})`;
+    c2.lineWidth=2; c2.stroke();
+  }
+}
+
+// ── 2D ANIMATIONS ────────────────────────────
+
+function d2Orbit(c2, t, W, H) {
+  const cx=W/2, cy=H/2;
+  c2.clearRect(0,0,W,H);
+  // center star
+  c2.beginPath(); c2.arc(cx,cy,14,0,Math.PI*2);
+  c2.fillStyle='#fbbf24'; c2.fill();
+  // orbiting bodies
+  [[30,1.2,8,'#60a5fa'],[48,.7,5,'#a78bfa'],[64,.4,6,'#34d399']].forEach(([r,spd,sz,col])=>{
+    const a=t*spd;
+    const bx=cx+r*Math.cos(a), by=cy+r*.35*Math.sin(a);
+    c2.beginPath(); c2.ellipse(cx,cy,r,r*.35,0,0,Math.PI*2);
+    c2.strokeStyle=col+'55'; c2.lineWidth=1; c2.stroke();
+    c2.beginPath(); c2.arc(bx,by,sz,0,Math.PI*2);
+    c2.fillStyle=col; c2.fill();
+  });
+}
+
+function d2Morph(c2, t, W, H) {
+  const cx=W/2, cy=H/2, p=(Math.sin(t)*.5+.5);
+  c2.clearRect(0,0,W,H);
+  const pts=6, r=34;
+  c2.beginPath();
+  for(let i=0;i<pts;i++){
+    const a=i/pts*Math.PI*2-Math.PI/2;
+    const circ_x=cx+r*Math.cos(a), circ_y=cy+r*Math.sin(a);
+    const sq_x=cx+(i%2===0?r:-r)*.85, sq_y=cy+(i<pts/2?-r:r)*.7;
+    const x=circ_x+(sq_x-circ_x)*p, y=circ_y+(sq_y-circ_y)*p;
+    i===0?c2.moveTo(x,y):c2.lineTo(x,y);
+  }
+  c2.closePath();
+  const hue=210+p*60;
+  c2.fillStyle=`hsl(${hue},80%,55%)`;
+  c2.fill();
+  c2.strokeStyle=`hsl(${hue+30},90%,70%)`; c2.lineWidth=2; c2.stroke();
+}
+
+function d2Reveal(c2, t, W, H) {
+  c2.clearRect(0,0,W,H);
+  const p=((t*.4)%1);
+  const cx=W/2, cy=H/2, r=38;
+  c2.save();
+  c2.beginPath(); c2.arc(cx,cy,r,0,Math.PI*2); c2.clip();
+  c2.fillStyle='#1e3a5f'; c2.fillRect(0,0,W,H);
+  // sweep reveal
+  c2.beginPath(); c2.moveTo(cx,cy);
+  c2.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+p*Math.PI*2); c2.closePath();
+  c2.fillStyle='#3b82f6'; c2.fill();
+  c2.restore();
+  // border
+  c2.beginPath(); c2.arc(cx,cy,r,0,Math.PI*2);
+  c2.strokeStyle='#60a5fa'; c2.lineWidth=3; c2.stroke();
+  // center dot
+  c2.beginPath(); c2.arc(cx,cy,8,0,Math.PI*2);
+  c2.fillStyle='#fff'; c2.fill();
+}
+
+// ── 3D ANIMATIONS ────────────────────────────
+
+function d3Cube(c2, t, W, H) {
+  c2.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2, s=28;
+  const rx=t*.5, ry=t*.8;
+  // 3D cube vertices
+  const verts=[];
+  for(let i=0;i<8;i++){
+    let x=((i&1)?1:-1)*s, y=((i&2)?1:-1)*s, z=((i&4)?1:-1)*s;
+    const y2=y*Math.cos(rx)-z*Math.sin(rx), z2=y*Math.sin(rx)+z*Math.cos(rx);
+    const x3=x*Math.cos(ry)+z2*Math.sin(ry), z3=-x*Math.sin(ry)+z2*Math.cos(ry);
+    const scale=200/(200+z3);
+    verts.push([cx+x3*scale, cy+y2*scale, z3]);
+  }
+  const faces=[[0,1,3,2],[4,5,7,6],[0,1,5,4],[2,3,7,6],[0,2,6,4],[1,3,7,5]];
+  const faceColors=['#1d4ed8','#2563eb','#3b82f6','#60a5fa','#1e3a8a','#1e40af'];
+  faces.forEach((f,i)=>{
+    c2.beginPath();
+    f.forEach((vi,j)=>j===0?c2.moveTo(verts[vi][0],verts[vi][1]):c2.lineTo(verts[vi][0],verts[vi][1]));
+    c2.closePath();
+    c2.fillStyle=faceColors[i]+'cc'; c2.fill();
+    c2.strokeStyle='#93c5fd'; c2.lineWidth=1; c2.stroke();
+  });
+}
+
+function d3Sphere(c2, t, W, H) {
+  c2.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2, r=36;
+  // latitude rings
+  const rings=8;
+  for(let i=1;i<rings;i++){
+    const phi=i/rings*Math.PI;
+    const ry_r=Math.sin(phi)*r;
+    const zy=Math.cos(phi)*r;
+    const a=t+i*.3;
+    c2.beginPath(); c2.ellipse(cx,cy+zy*.5,ry_r,ry_r*.35,0,0,Math.PI*2);
+    c2.strokeStyle=`hsla(${210+i*8},80%,60%,${.25+Math.sin(t+i)*.1})`;
+    c2.lineWidth=1; c2.stroke();
+    // dot on ring
+    c2.beginPath(); c2.arc(cx+ry_r*Math.cos(a),cy+zy*.5+ry_r*.35*Math.sin(a)*.3,2.5,0,Math.PI*2);
+    c2.fillStyle=`hsl(${210+i*8},90%,70%)`; c2.fill();
+  }
+  // vertical arcs
+  for(let j=0;j<4;j++){
+    const a=j/4*Math.PI+t*.3;
+    c2.beginPath();
+    c2.ellipse(cx,cy,r*Math.abs(Math.cos(a)),r*.5,a,0,Math.PI*2);
+    c2.strokeStyle='#3b82f655'; c2.lineWidth=1; c2.stroke();
+  }
+  // glow center
+  c2.beginPath(); c2.arc(cx,cy,10,0,Math.PI*2);
+  c2.fillStyle='rgba(96,165,250,.8)'; c2.fill();
+}
+
+function d3DNA(c2, t, W, H) {
+  c2.clearRect(0,0,W,H);
+  const cx=W/2, cy=H/2, r=24, height=64, rungs=10;
+  for(let i=0;i<rungs;i++){
+    const p=i/rungs;
+    const y=cy-height/2+p*height;
+    const a1=p*Math.PI*3+t, a2=a1+Math.PI;
+    const x1=cx+r*Math.cos(a1), x2=cx+r*Math.cos(a2);
+    // rung
+    c2.beginPath(); c2.moveTo(x1,y); c2.lineTo(x2,y);
+    c2.strokeStyle=`rgba(99,102,241,.5)`; c2.lineWidth=2; c2.stroke();
+    // strand dots
+    c2.beginPath(); c2.arc(x1,y,3.5,0,Math.PI*2); c2.fillStyle='#818cf8'; c2.fill();
+    c2.beginPath(); c2.arc(x2,y,3.5,0,Math.PI*2); c2.fillStyle='#f472b6'; c2.fill();
+  }
+  // strands
+  for(let strand=0;strand<2;strand++){
+    c2.beginPath();
+    for(let i=0;i<=40;i++){
+      const p=i/40, y=cy-height/2+p*height;
+      const a=(strand===0?1:-1)*Math.PI;
+      const x=cx+r*Math.cos(p*Math.PI*3+t+strand*Math.PI);
+      i===0?c2.moveTo(x,y):c2.lineTo(x,y);
+    }
+    c2.strokeStyle=strand===0?'#818cf8':'#f472b6';
+    c2.lineWidth=2; c2.stroke();
+  }
+}
+
+// ─────────────────────────────────────────────
+// BUILD LOGO GRID
+// ─────────────────────────────────────────────
+function buildLogoGrid() {
+  const grid=document.getElementById('animGrid');
+  grid.innerHTML='';
+  LOGO_ANIMS.forEach(a=>{
+    const card=document.createElement('div');
+    card.className='anim-card'+(S.logoAnim===a.id?' sel':'');
+    card.dataset.id=a.id;
+    const cv=document.createElement('canvas');
+    cv.width=54; cv.height=54;
+    const sp=document.createElement('span'); sp.textContent=a.label;
+    card.appendChild(cv); card.appendChild(sp);
+    card.onclick=()=>{
+      S.logoAnim=a.id;
+      document.querySelectorAll('.anim-card').forEach(c=>c.classList.remove('sel'));
+      card.classList.add('sel');
+    };
+    grid.appendChild(card);
+  });
+  // animate previews
+  function animPreviews(ts){
+    const t=ts/1000;
+    LOGO_ANIMS.forEach(a=>{
+      const card=document.querySelector(`.anim-card[data-id="${a.id}"]`);
+      if(!card) return;
+      const cv=card.querySelector('canvas');
+      const c2=cv.getContext('2d');
+      c2.fillStyle='#0a0a0a'; c2.fillRect(0,0,54,54);
+      a.draw(c2,t,54,54);
+    });
+    requestAnimationFrame(animPreviews);
+  }
+  requestAnimationFrame(animPreviews);
+}
+
+// ─────────────────────────────────────────────
+// MAIN DRAW
+// ─────────────────────────────────────────────
+function drawFrame(ts) {
+  const dt=Math.min((ts-S.lastTS)/1000,.1);
+  S.lastTS=ts;
+  S.fpsAccum+=dt; S.fpsCount++;
+  if(S.fpsAccum>=1){ document.getElementById('fpsLabel').textContent=S.fpsCount+' fps'; S.fpsAccum=0;S.fpsCount=0; }
+  if(S.playing) { S.t+=dt; S.frame++; }
+
+  const W=C.width, H=C.height, t=S.t;
+
+  // ── BACKGROUND ──
+  drawBG(W,H,t);
+
+  // ── LOGO ANIMATION ──
+  const la=LOGO_ANIMS.find(a=>a.id===S.logoAnim);
+  if(la){
+    ctx.save();
+    ctx.translate(W/2,H/2);
+    const scale=Math.min(W,H)/140;
+    ctx.scale(scale,scale);
+    ctx.translate(-W/2,-H/2);
+    la.draw(ctx,t,W,H);
+    ctx.restore();
+  }
+
+  // ── USER IMAGE ──
+  drawUserImage(W,H,t);
+
+  // ── TEXT ──
+  drawText(W,H,t);
+
+  // ── PARTICLES / OVERLAYS ──
+  drawOverlays(W,H,t);
+
+  // ── VIGNETTE ──
+  const v=parseFloat(document.getElementById('vigAmt').value);
+  if(v>0){
+    const g=ctx.createRadialGradient(W/2,H/2,H*.2,W/2,H/2,H*.8);
+    g.addColorStop(0,'transparent');
+    g.addColorStop(1,`rgba(0,0,0,${v})`);
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  }
+
+  // ── TIMECODE ──
+  const mm=Math.floor(t/60).toString().padStart(2,'0');
+  const ss=Math.floor(t%60).toString().padStart(2,'0');
+  const ff=Math.floor((t%1)*60).toString().padStart(2,'0');
+  document.getElementById('timecodeBox').textContent=`${mm}:${ss}:${ff}`;
+
+  // ── SCENE THUMBNAILS ──
+  if(S.frame%30===0) updateSceneThumbs();
+
   requestAnimationFrame(drawFrame);
 }
 
-// ============================================================
-// BACKGROUND
-// ============================================================
-function drawBackground() {
-  const t = state.animFrame;
-  switch(state.bgType) {
+function drawBG(W,H,t){
+  const c1=document.getElementById('bgColor').value;
+  const c2=document.getElementById('bg2Color').value;
+  switch(S.bgType){
     case 'solid':
-      ctx.fillStyle = state.bgColor;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      break;
-    case 'gradient':
-      const angle = (state.grad.angle * Math.PI/180);
-      const cx2 = canvas.width/2, cy2=canvas.height/2;
-      const len = Math.sqrt(canvas.width**2+canvas.height**2)/2;
-      const grd = ctx.createLinearGradient(
-        cx2 - Math.cos(angle)*len, cy2 - Math.sin(angle)*len,
-        cx2 + Math.cos(angle)*len, cy2 + Math.sin(angle)*len
-      );
-      grd.addColorStop(state.grad.p1/100, state.grad.c1);
-      grd.addColorStop(state.grad.p2/100, state.grad.c2);
-      grd.addColorStop(state.grad.p3/100, state.grad.c3);
-      ctx.fillStyle = grd;
-      ctx.fillRect(0,0,canvas.width,canvas.height);
-      break;
-    case 'pattern':
-      drawPattern();
-      break;
-    case 'animated':
-      drawAnimatedBg(t);
-      break;
-  }
-}
-
-function drawPattern() {
-  ctx.fillStyle = '#0a0a0a';
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-  ctx.strokeStyle = state.patternColor;
-  ctx.lineWidth = 1;
-  const W=canvas.width, H=canvas.height;
-  switch(state.patternType) {
+      ctx.fillStyle=c1; ctx.fillRect(0,0,W,H); break;
+    case 'gradient':{
+      const g=ctx.createLinearGradient(0,0,W,H);
+      g.addColorStop(0,c1); g.addColorStop(1,c2);
+      ctx.fillStyle=g; ctx.fillRect(0,0,W,H); break;}
     case 'grid':
+      ctx.fillStyle=c1; ctx.fillRect(0,0,W,H);
+      ctx.strokeStyle=c2+'44'; ctx.lineWidth=1;
       for(let x=0;x<W;x+=40){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke()}
       for(let y=0;y<H;y+=40){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke()}
       break;
     case 'dots':
-      ctx.fillStyle = state.patternColor;
+      ctx.fillStyle=c1; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle=c2+'66';
       for(let x=20;x<W;x+=40)for(let y=20;y<H;y+=40){ctx.beginPath();ctx.arc(x,y,2,0,Math.PI*2);ctx.fill()}
       break;
-    case 'hex':
-      const r=30, h=r*Math.sqrt(3);
-      for(let row=0;row<H/h+1;row++)for(let col=0;col<W/(r*3)+1;col++){
-        const px=col*r*3+(row%2)*r*1.5, py=row*h;
-        drawHex(px,py,r);
-      }
-      break;
-    case 'stripes':
-      for(let x=-H;x<W+H;x+=40){
-        ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x+H,H);ctx.stroke();
-      }
-      break;
-  }
-}
-
-function drawHex(x,y,r){
-  ctx.beginPath();
-  for(let i=0;i<6;i++){
-    const a=i*Math.PI/3;
-    ctx.lineTo(x+r*Math.cos(a),y+r*Math.sin(a));
-  }
-  ctx.closePath();ctx.stroke();
-}
-
-function drawAnimatedBg(t) {
-  const W=canvas.width, H=canvas.height;
-  ctx.fillStyle='#050510'; ctx.fillRect(0,0,W,H);
-  switch(state.bgAnimType) {
     case 'particles':
-      // managed via particle system
-      ctx.fillStyle='#050510'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle=c1; ctx.fillRect(0,0,W,H);
+      if(!S._pts){ S._pts=[]; for(let i=0;i<80;i++) S._pts.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,h:Math.random()*360}); }
+      ctx.fillStyle=c1; ctx.fillRect(0,0,W,H);
+      S._pts.forEach(p=>{p.x=(p.x+p.vx+W)%W; p.y=(p.y+p.vy+H)%H; ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fillStyle=`hsla(${p.h},80%,60%,.5)`;ctx.fill()});
       break;
     case 'waves':
-      for(let i=0;i<6;i++){
-        ctx.beginPath();
-        ctx.strokeStyle = `hsla(${220+i*20},70%,50%,${0.15-i*0.02})`;
-        ctx.lineWidth = 2;
-        for(let x=0;x<=W;x+=4){
-          const y2 = H/2 + Math.sin(x/120+t*0.02+i*0.5)*((i+1)*25);
-          x===0?ctx.moveTo(x,y2):ctx.lineTo(x,y2);
-        }
-        ctx.stroke();
-      }
-      break;
-    case 'matrix':
-      ctx.fillStyle='rgba(0,0,0,.05)'; ctx.fillRect(0,0,W,H);
-      ctx.fillStyle='#0f0'; ctx.font='14px monospace';
-      if(!state.matrixCols){
-        state.matrixCols=[];
-        for(let x=0;x<W/14;x++) state.matrixCols.push(Math.random()*H);
-      }
-      if(t%3===0){
-        state.matrixCols.forEach((y,i)=>{
-          const ch=String.fromCharCode(0x30A0+Math.random()*96);
-          ctx.fillText(ch,i*14,y);
-          state.matrixCols[i]=(y>H+20)?0:y+14;
-        });
-      }
-      break;
-    case 'aurora':
-      for(let i=0;i<4;i++){
-        const grd=ctx.createLinearGradient(0,H*0.2,0,H*0.8);
-        grd.addColorStop(0,'transparent');
-        grd.addColorStop(0.5,`hsla(${140+i*30},100%,50%,${0.15+0.05*Math.sin(t*0.01+i)})`);
-        grd.addColorStop(1,'transparent');
-        ctx.save();
-        ctx.translate(0,Math.sin(t*0.008+i*1.5)*40);
-        ctx.fillStyle=grd;
-        ctx.fillRect(0,0,W,H);
-        ctx.restore();
-      }
-      break;
-    case 'plasma':
-      const id=ctx.getImageData(0,0,W,H);
-      const d=id.data;
-      for(let py=0;py<H;py+=4)for(let px=0;px<W;px+=4){
-        const v=Math.sin(px/60+t*0.02)+Math.sin(py/40)+Math.sin((px+py)/80+t*0.015)+Math.sin(Math.sqrt(px*px+py*py)/50);
-        const hue=(v+3)/6;
-        const [r2,g2,b2]=hslToRgb(hue,.9,.5);
-        for(let dy=0;dy<4;dy++)for(let dx=0;dx<4;dx++){
-          const idx=((py+dy)*W+(px+dx))*4;
-          d[idx]=r2;d[idx+1]=g2;d[idx+2]=b2;d[idx+3]=255;
-        }
-      }
-      ctx.putImageData(id,0,0);
+      ctx.fillStyle=c1; ctx.fillRect(0,0,W,H);
+      for(let i=0;i<5;i++){ctx.beginPath();for(let x=0;x<=W;x+=4){const y=H/2+Math.sin(x/100+t+i*.7)*(40+i*20);x===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}ctx.strokeStyle=`hsla(${200+i*15},80%,55%,.18)`;ctx.lineWidth=2;ctx.stroke();}
       break;
   }
 }
 
-function hslToRgb(h,s,l){
-  let r,g,b;
-  if(s===0){r=g=b=l}else{
-    const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;
-    r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);
+function drawUserImage(W,H,t){
+  if(!S.imgObj) return;
+  const ix=parseFloat(document.getElementById('imgX').value)/100*W;
+  const iy=parseFloat(document.getElementById('imgY').value)/100*H;
+  const sc=parseFloat(document.getElementById('imgScale').value)/100;
+  let rot=parseFloat(document.getElementById('imgRot').value)*Math.PI/180;
+  let dx=0, dy=0, sc2=sc;
+  switch(document.getElementById('imgAnim').value){
+    case 'spin': rot+=t*1.5; break;
+    case 'float': dy=Math.sin(t*1.5)*12; break;
+    case 'pulse': sc2=sc*(1+Math.sin(t*2)*.08); break;
+    case 'bounce': dy=Math.abs(Math.sin(t*2))*-20; break;
+    case 'shake': dx=(Math.random()-.5)*6; break;
   }
-  return[Math.round(r*255),Math.round(g*255),Math.round(b*255)];
-}
-function hue2rgb(p,q,t){if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p}
-
-// ============================================================
-// TEXT LAYERS
-// ============================================================
-function drawTextLayers() {
-  const t = state.animFrame;
-  state.textLayers.forEach(layer => {
-    ctx.save();
-    ctx.globalAlpha = layer.opacity/100;
-    ctx.shadowColor = layer.shadow;
-    ctx.shadowBlur = layer.shadowBlur;
-    ctx.font = `${layer.size}px ${layer.font}`;
-    ctx.textBaseline = 'top';
-    drawAnimatedText(layer, t);
-    ctx.restore();
-  });
+  const iw=S.imgObj.width*sc2, ih=S.imgObj.height*sc2;
+  ctx.save();
+  ctx.translate(ix+dx,iy+dy);
+  ctx.rotate(rot);
+  ctx.drawImage(S.imgObj,-iw/2,-ih/2,iw,ih);
+  ctx.restore();
 }
 
-function drawAnimatedText(layer, t) {
-  const chars = layer.text.split('');
-  layer.animPhase = (layer.animPhase||0) + 1;
-  const ph = layer.animPhase;
-  let x = layer.x, y = layer.y;
+function drawText(W,H,t){
+  const txt=document.getElementById('txtContent').value;
+  const font=document.getElementById('txtFont').value;
+  const size=parseFloat(document.getElementById('txtSize').value);
+  const col=document.getElementById('txtColor').value;
+  const tx=parseFloat(document.getElementById('txtX').value)/100*W;
+  const ty=parseFloat(document.getElementById('txtY').value)/100*H;
+  const anim=document.getElementById('txtAnim').value;
+  ctx.save();
+  ctx.font=`bold ${size}px "${font}"`;
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.shadowColor='rgba(0,0,0,.6)'; ctx.shadowBlur=8;
 
-  switch(layer.anim) {
+  switch(anim){
     case 'none':
-      ctx.fillStyle = layer.color;
-      ctx.fillText(layer.text, x, y);
-      break;
-
-    case 'typewriter':
-      const visCount = Math.floor(ph/3) % (chars.length+1);
-      ctx.fillStyle = layer.color;
-      ctx.fillText(layer.text.slice(0,visCount), x, y);
-      if(Math.floor(ph/20)%2===0){
-        ctx.fillText('|', x + ctx.measureText(layer.text.slice(0,visCount)).width+2, y);
-      }
-      break;
-
+      ctx.fillStyle=col; ctx.fillText(txt,tx,ty); break;
+    case 'typewriter':{
+      const n=Math.floor(((t*.8)%1)*txt.length);
+      ctx.fillStyle=col; ctx.fillText(txt.slice(0,n),tx,ty); break;}
+    case 'wave':{
+      ctx.textAlign='left';
+      const tw=ctx.measureText(txt).width;
+      [...txt].forEach((ch,i)=>{
+        const cx2=tx-tw/2+ctx.measureText(txt.slice(0,i)).width;
+        const cy2=ty+Math.sin(t*2+i*.5)*14;
+        ctx.fillStyle=col; ctx.fillText(ch,cx2,cy2);
+      }); break;}
     case 'glitch':
-      for(let i=0;i<3;i++){
-        ctx.fillStyle = i===0?'rgba(255,0,0,.7)':i===1?'rgba(0,255,255,.7)':layer.color;
-        const ox = i===0?Math.sin(ph*0.3)*8:i===1?Math.cos(ph*0.4)*-6:0;
-        const oy = i===0?Math.cos(ph*0.2)*2:0;
-        ctx.fillText(layer.text, x+ox, y+oy);
-      }
-      if(ph%20<5){
-        const gx=x, gw=ctx.measureText(layer.text).width;
-        const gy=y+Math.random()*layer.size;
-        ctx.fillStyle='rgba(255,255,255,.4)';
-        ctx.fillRect(gx, gy, gw, 2+Math.random()*4);
-      }
-      break;
-
-    case 'wave':
-      chars.forEach((ch,i)=>{
-        const cy = y + Math.sin(ph*0.05+i*0.4)*12;
-        ctx.fillStyle = layer.color;
-        const prevT = chars.slice(0,i).join('');
-        ctx.fillText(ch, x+ctx.measureText(prevT).width, cy);
-      });
-      break;
-
-    case 'bounce':
-      const by = y + Math.abs(Math.sin(ph*0.08))*-20;
-      ctx.fillStyle = layer.color;
-      ctx.fillText(layer.text, x, by);
-      break;
-
-    case 'fade':
-      const fa = Math.min(ph/60, 1);
-      ctx.globalAlpha = fa * (layer.opacity/100);
-      ctx.fillStyle = layer.color;
-      ctx.fillText(layer.text, x, y);
-      break;
-
-    case 'slide':
-      const sx = x - Math.max(0,(200-ph)*3);
-      ctx.fillStyle = layer.color;
-      ctx.fillText(layer.text, sx, y);
-      break;
-
+      ['rgba(255,0,0,.6)','rgba(0,255,255,.6)',col].forEach((c,i)=>{
+        ctx.fillStyle=c;
+        ctx.fillText(txt,tx+(i===0?Math.sin(t*5)*5:i===1?Math.cos(t*4)*-5:0),ty+(i===0?2:0));
+      }); break;
+    case 'rainbow':{
+      ctx.textAlign='left';
+      const tw2=ctx.measureText(txt).width;
+      [...txt].forEach((ch,i)=>{
+        const cx2=tx-tw2/2+ctx.measureText(txt.slice(0,i)).width;
+        ctx.fillStyle=`hsl(${(i/txt.length*360+t*60)%360},100%,65%)`;
+        ctx.fillText(ch,cx2,ty);
+      }); break;}
     case 'neon':
-      const neonC = layer.color;
-      for(let r=6;r>=0;r--){
-        ctx.shadowColor = neonC;
-        ctx.shadowBlur = r*5;
-        ctx.fillStyle = r===0?neonC:`rgba(255,255,255,${.05*(6-r)})`;
-        ctx.fillText(layer.text, x, y);
-      }
-      break;
-
-    case 'rainbow':
-      chars.forEach((ch,i)=>{
-        const hue=(i/chars.length*360+ph*2)%360;
-        ctx.fillStyle=`hsl(${hue},100%,60%)`;
-        const prevT=chars.slice(0,i).join('');
-        ctx.fillText(ch, x+ctx.measureText(prevT).width, y);
-      });
-      break;
-
-    case 'explode':
-      chars.forEach((ch,i)=>{
-        const delay=i*8;
-        const progress=Math.max(0,ph-delay);
-        const scale=Math.min(1,progress/20);
-        const alpha=Math.min(1,progress/30);
-        const fromX=canvas.width/2, fromY=canvas.height/2;
-        const toX=x+ctx.measureText(chars.slice(0,i).join('')).width;
-        const curX=fromX+(toX-fromX)*scale;
-        const curY=fromY+(y-fromY)*scale;
-        ctx.save();
-        ctx.globalAlpha=alpha*(layer.opacity/100);
-        ctx.fillStyle=layer.color;
-        ctx.fillText(ch,curX,curY);
-        ctx.restore();
-      });
-      break;
+      for(let r=12;r>=0;r--){
+        ctx.shadowColor=col; ctx.shadowBlur=r*4;
+        ctx.fillStyle=r===0?col:`rgba(255,255,255,${.03*(12-r)})`;
+        ctx.fillText(txt,tx,ty);
+      } break;
   }
+  ctx.restore();
 }
 
-// ============================================================
-// IMAGE
-// ============================================================
-function drawImages() {
-  const img = state.img;
-  if(!img.obj) return;
-  const t = state.animFrame;
-
-  if(img.animSpin) img.rot += img.spinSpeed;
-  if(img.animBounce){
-    img.bounceY += img.bounceDir*3;
-    if(img.bounceY>40||img.bounceY<-40) img.bounceDir*=-1;
-  }
-  if(img.animPulse){
-    img.pulsePhase += .06;
-    img.scale += Math.sin(img.pulsePhase)*0.5;
-  }
-  if(img.animFloat){
-    img.floatPhase += .025;
-    img.y += Math.sin(img.floatPhase)*0.5;
-  }
-  if(img.animShake){
-    img.shakeX = (Math.random()-.5)*10;
-  }
-  if(img.animFlash && t%8===0) img.flashVisible=!img.flashVisible;
-
-  if(!img.animFlash||img.flashVisible){
-    ctx.save();
-    ctx.globalAlpha = img.opacity/100;
-    ctx.translate(img.x + (img.shakeX||0), img.y + (img.bounceY||0));
-    ctx.rotate(img.rot * Math.PI/180);
-    const s = (img.scale||100)/100;
-    const w=img.obj.width*s, h=img.obj.height*s;
-    ctx.drawImage(img.obj, -w/2, -h/2, w, h);
-    ctx.restore();
-  }
+// ─────────────────────────────────────────────
+// OVERLAYS
+// ─────────────────────────────────────────────
+function drawOverlays(W,H,t){
+  if(S.fx.snow){ spawnSnow(W); drawSnow(W,H); }
+  if(S.fx.rain){ spawnRain(W); drawRain(W,H); }
+  if(S.fx.sparks){ spawnSparks(W,H); drawSparks(); }
+  if(S.fx.fireworks){ if(S.frame%40===0) spawnFirework(W,H); drawFireworks(); }
+  if(S.fx.lens) drawLens(W,H,t);
 }
 
-// ============================================================
-// PARTICLES & OVERLAYS
-// ============================================================
-function updateParticles() {
-  const W=canvas.width, H=canvas.height, t=state.animFrame;
+function spawnSnow(W){ while(S.snow.length<150) S.snow.push({x:Math.random()*W,y:-5,s:Math.random()*3+1,sp:Math.random()+.3}); }
+function drawSnow(W,H){ S.snow.forEach((p,i)=>{p.y+=p.sp; p.x+=Math.sin(S.t+i)*.3; if(p.y>H+10)p.y=-5; ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,Math.PI*2);ctx.fillStyle='rgba(255,255,255,.75)';ctx.fill();}); }
+function spawnRain(W){ while(S.rain.length<300) S.rain.push({x:Math.random()*W,y:Math.random()*600,sp:Math.random()*6+6,l:Math.random()*12+8}); }
+function drawRain(W,H){ ctx.strokeStyle='rgba(150,190,255,.35)';ctx.lineWidth=1; S.rain.forEach(p=>{p.y+=p.sp;if(p.y>H+20)p.y=-20;ctx.beginPath();ctx.moveTo(p.x,p.y);ctx.lineTo(p.x+p.l*.2,p.y+p.l);ctx.stroke();}); }
+function spawnSparks(W,H){ if(S.frame%3===0) for(let i=0;i<3;i++) S.sparks.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4-1,life:1,h:Math.random()*60+30}); }
+function drawSparks(){ S.sparks.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.life-=.025;if(p.life<=0){S.sparks.splice(i,1);return;}ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fillStyle=`hsla(${p.h},100%,70%,${p.life})`;ctx.fill();}); }
+function spawnFirework(W,H){ const fw={x:Math.random()*W*.8+W*.1,y:Math.random()*H*.5,ps:[],h:Math.random()*360}; for(let i=0;i<50;i++){const a=Math.random()*Math.PI*2,sp=Math.random()*4+2;fw.ps.push({x:fw.x,y:fw.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1});} S.fireworks.push(fw); }
+function drawFireworks(){ S.fireworks.forEach((fw,fi)=>{fw.ps.forEach((p,i)=>{p.x+=p.vx;p.y+=p.vy;p.vy+=.06;p.life-=.018;if(p.life<=0){fw.ps.splice(i,1);return;}ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fillStyle=`hsla(${fw.h},100%,70%,${p.life})`;ctx.fill();});if(fw.ps.length===0)S.fireworks.splice(fi,1);}); }
+function drawLens(W,H,t){ S.lensX=(S.lensX+1.5)%W; const cx=S.lensX, cy=H*(.3+Math.sin(t*.4)*.1); const g=ctx.createRadialGradient(cx,cy,0,cx,cy,80); g.addColorStop(0,'rgba(255,255,255,.18)');g.addColorStop(.4,'rgba(255,220,150,.07)');g.addColorStop(1,'transparent'); ctx.fillStyle=g;ctx.fillRect(0,0,W,H); [30,50,70].forEach((r,i)=>{ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle=`rgba(255,255,255,${.08-i*.02})`;ctx.lineWidth=1;ctx.stroke();}); }
 
-  if(state.showParticles) {
-    if(state.particles.length<120){
-      state.particles.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*1.2,vy:(Math.random()-.5)*1.2,r:Math.random()*3+1,hue:Math.random()*360,life:1});
-    }
-    state.particles.forEach((p,i)=>{
-      p.x+=p.vx; p.y+=p.vy; p.life-=.003;
-      if(p.x<0||p.x>W||p.y<0||p.y>H||p.life<=0){
-        state.particles.splice(i,1); return;
-      }
-      ctx.beginPath();
-      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle=`hsla(${p.hue},100%,70%,${p.life})`;
-      ctx.fill();
-      // connect nearby
-      state.particles.forEach(p2=>{
-        const dx=p.x-p2.x,dy=p.y-p2.y,d=Math.sqrt(dx*dx+dy*dy);
-        if(d<80){
-          ctx.beginPath();
-          ctx.strokeStyle=`hsla(${p.hue},100%,70%,${(1-d/80)*p.life*.3})`;
-          ctx.lineWidth=.5;
-          ctx.moveTo(p.x,p.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
-        }
-      });
-    });
-  }
+function toggleFX(key,btn){ S.fx[key]=!S.fx[key]; btn.classList.toggle('on',S.fx[key]); }
+function clearFX(){ Object.keys(S.fx).forEach(k=>S.fx[k]=false); document.querySelectorAll('.sbtn[id^="btn"]').forEach(b=>b.classList.remove('on')); S.snow=[];S.rain=[];S.sparks=[];S.fireworks=[]; }
 
-  if(state.showSnow) {
-    if(state.snowflakes.length<200){
-      state.snowflakes.push({x:Math.random()*W,y:-5,size:Math.random()*4+1,speed:Math.random()*1.5+0.5,drift:Math.random()*.5-.25});
-    }
-    state.snowflakes.forEach((s,i)=>{
-      s.y+=s.speed; s.x+=s.drift;
-      if(s.y>H+10){state.snowflakes.splice(i,1);return;}
-      ctx.beginPath();ctx.arc(s.x,s.y,s.size,0,Math.PI*2);
-      ctx.fillStyle='rgba(255,255,255,.8)';ctx.fill();
-    });
-  }
-
-  if(state.showRain) {
-    ctx.fillStyle='rgba(0,0,20,.05)';
-    ctx.fillRect(0,0,W,H);
-    if(state.raindrops.length<300){
-      state.raindrops.push({x:Math.random()*W,y:-10,speed:Math.random()*8+6,len:Math.random()*15+10});
-    }
-    ctx.strokeStyle='rgba(130,180,255,.4)';ctx.lineWidth=1;
-    state.raindrops.forEach((r,i)=>{
-      r.y+=r.speed;
-      if(r.y>H+20){state.raindrops.splice(i,1);return;}
-      ctx.beginPath();ctx.moveTo(r.x,r.y);ctx.lineTo(r.x+r.len*.3,r.y+r.len);ctx.stroke();
-    });
-  }
-
-  if(state.showFireworks && t%30===0) {
-    const fx={x:Math.random()*W,y:Math.random()*H*.6,particles:[],hue:Math.random()*360};
-    for(let i=0;i<40;i++){
-      const a=Math.random()*Math.PI*2, sp=Math.random()*5+2;
-      fx.particles.push({x:fx.x,y:fx.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,life:1});
-    }
-    state.fireworks.push(fx);
-  }
-  state.fireworks.forEach((fw,fi)=>{
-    fw.particles.forEach((p,i)=>{
-      p.x+=p.vx;p.y+=p.vy;p.vy+=.08;p.vx*=.97;p.life-=.018;
-      if(p.life<=0){fw.particles.splice(i,1);return;}
-      ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);
-      ctx.fillStyle=`hsla(${fw.hue},100%,70%,${p.life})`;ctx.fill();
-    });
-    if(fw.particles.length===0)state.fireworks.splice(fi,1);
-  });
-
-  if(state.showLightning && t%90<5) {
-    drawLightning(Math.random()*W, 0, Math.random()*W, H, 6);
-  }
-}
-
-function drawLightning(x1,y1,x2,y2,roughness){
-  if(Math.abs(x2-x1)+Math.abs(y2-y1)<10){
-    ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);
-    ctx.strokeStyle='rgba(200,200,255,.9)';ctx.lineWidth=2;ctx.stroke();
-    return;
-  }
-  const mx=(x1+x2)/2+(Math.random()-.5)*roughness*2;
-  const my=(y1+y2)/2+(Math.random()-.5)*roughness;
-  drawLightning(x1,y1,mx,my,roughness*.6);
-  drawLightning(mx,my,x2,y2,roughness*.6);
-  if(Math.random()<.3) drawLightning(mx,my,mx+(Math.random()-.5)*100,my+Math.random()*80,roughness*.4);
-}
-
-// ============================================================
-// POST-PROCESSING FX
-// ============================================================
-function applyFXLayer() {
-  const fx = state.fx;
-  const W=canvas.width, H=canvas.height;
-  const {brightness,contrast,saturation,vignette,chromo,noise,scanlines,pixelSize} = fx;
-
-  if(brightness===0&&contrast===0&&saturation===0&&vignette===0&&chromo===0&&noise===0&&scanlines===0&&pixelSize===1) return;
-
-  // Pixelisation first (on entire scene)
-  if(pixelSize>1){
-    const ps=Math.round(pixelSize);
-    ctx.save();
-    ctx.imageSmoothingEnabled=false;
-    const tmp=document.createElement('canvas');
-    tmp.width=Math.ceil(W/ps);tmp.height=Math.ceil(H/ps);
-    tmp.getContext('2d').drawImage(canvas,0,0,tmp.width,tmp.height);
-    ctx.drawImage(tmp,0,0,W,H);
-    ctx.restore();
-    return; // skip pixel ops after
-  }
-
-  const id=ctx.getImageData(0,0,W,H), d=id.data;
-  const bFactor=brightness/100;
-  const cFactor=(100+contrast)/100;
-  const sFactor=(100+saturation)/100;
-  const noiseAmt=noise/100*40;
-
-  for(let i=0;i<d.length;i+=4){
-    let r=d[i],g=d[i+1],b=d[i+2];
-    // brightness
-    r+=bFactor*128; g+=bFactor*128; b+=bFactor*128;
-    // contrast
-    r=(r-128)*cFactor+128; g=(g-128)*cFactor+128; b=(b-128)*cFactor+128;
-    // saturation
-    const grey=r*.3+g*.59+b*.11;
-    r=grey+(r-grey)*sFactor; g=grey+(g-grey)*sFactor; b=grey+(b-grey)*sFactor;
-    // noise
-    if(noiseAmt>0){const n=(Math.random()-.5)*noiseAmt;r+=n;g+=n;b+=n;}
-    d[i]=Math.max(0,Math.min(255,r));
-    d[i+1]=Math.max(0,Math.min(255,g));
-    d[i+2]=Math.max(0,Math.min(255,b));
-  }
-  ctx.putImageData(id,0,0);
-
-  // Chromatic aberration
-  if(chromo>0){
-    const ca=chromo;
-    ctx.save();
-    ctx.globalCompositeOperation='screen';
-    ctx.globalAlpha=.3;
-    ctx.drawImage(canvas,ca,0,W,H,0,0,W,H);
-    ctx.drawImage(canvas,-ca,0,W,H,0,0,W,H);
-    ctx.restore();
-  }
-
-  // Vignette
-  if(vignette>0){
-    const grd=ctx.createRadialGradient(W/2,H/2,H*.25,W/2,H/2,H*.8);
-    grd.addColorStop(0,'transparent');
-    grd.addColorStop(1,`rgba(0,0,0,${vignette/100})`);
-    ctx.fillStyle=grd; ctx.fillRect(0,0,W,H);
-  }
-
-  // Scanlines
-  if(scanlines>0){
-    const alpha=scanlines/200;
-    for(let y=0;y<H;y+=2){
-      ctx.fillStyle=`rgba(0,0,0,${alpha})`;
-      ctx.fillRect(0,y,W,1);
-    }
-  }
-}
-
-// ============================================================
-// TRANSITIONS
-// ============================================================
-function drawTransition() {
-  if(!state.transition.active) return;
-  const tr = state.transition;
-  const W=canvas.width, H=canvas.height;
-  tr.progress += 16/tr.duration;
-  if(tr.progress>=1){tr.active=false;ctx.globalAlpha=1;canvas.style.filter='';return;}
-  const p=tr.progress;
-
-  switch(tr.type){
-    case 'Fade':
-      ctx.fillStyle=`rgba(0,0,0,${Math.sin(p*Math.PI)})`;
-      ctx.fillRect(0,0,W,H);
-      break;
-    case 'Slide Left':
-      ctx.fillStyle='#000';
-      ctx.fillRect(W-p*W*2,0,W,H);
-      break;
-    case 'Slide Right':
-      ctx.fillStyle='#000';
-      ctx.fillRect(p*W*2-W,0,W,H);
-      break;
-    case 'Zoom In':
-      ctx.save();ctx.scale(1+p*.5,1+p*.5);ctx.restore();
-      ctx.fillStyle=`rgba(0,0,0,${p})`;ctx.fillRect(0,0,W,H);
-      break;
-    case 'Flash':
-      canvas.style.opacity=(Math.floor(p*10)%2===0)?'1':'0';
-      if(p>.9)canvas.style.opacity='1';
-      break;
-    case 'Blur':
-      canvas.style.filter=`blur(${Math.sin(p*Math.PI)*12}px)`;
-      break;
-    case 'Wipe':
-      ctx.fillStyle='#000';ctx.fillRect(0,0,W*p*2,H);
-      break;
-    case 'Pixel Dissolve':
-      if(p<.5){
-        for(let i=0;i<100;i++){
-          ctx.fillStyle=`rgba(0,0,0,${p*2})`;
-          ctx.fillRect(Math.random()*W,Math.random()*H,20+Math.random()*40,20+Math.random()*40);
-        }
-      }
-      break;
-    case 'Spiral':
-      ctx.save();ctx.translate(W/2,H/2);ctx.rotate(p*Math.PI*4);ctx.scale(p,p);
-      ctx.fillStyle='rgba(0,0,0,.5)';ctx.fillRect(-W/2,-H/2,W,H);
-      ctx.restore();
-      break;
-  }
-}
-
-// ============================================================
-// OVERLAY TOGGLES
-// ============================================================
-function toggleParticles(){state.showParticles=!state.showParticles}
-function toggleSnow(){state.showSnow=!state.showSnow;if(!state.showSnow)state.snowflakes=[]}
-function toggleRain(){state.showRain=!state.showRain;if(!state.showRain)state.raindrops=[]}
-function toggleFireworks(){state.showFireworks=!state.showFireworks}
-function toggleLightning(){state.showLightning=!state.showLightning}
-function clearOverlays(){
-  state.showParticles=state.showSnow=state.showRain=state.showFireworks=state.showLightning=false;
-  state.particles=[];state.snowflakes=[];state.raindrops=[];state.fireworks=[];
-}
-
-// ============================================================
-// CONTROLS
-// ============================================================
-function applyText() {
-  const layer = state.textLayers[0]||{};
-  layer.text = document.getElementById('textInput').value;
-  layer.font = document.getElementById('fontFamily').value;
-  layer.size = +document.getElementById('fontSize').value;
-  layer.color = document.getElementById('textColor').value;
-  layer.shadow = document.getElementById('shadowColor').value;
-  layer.shadowBlur = +document.getElementById('shadowBlur').value;
-  layer.opacity = +document.getElementById('textOpacity').value;
-  layer.x = +document.getElementById('textX').value;
-  layer.y = +document.getElementById('textY').value;
-  layer.anim = document.getElementById('textAnim').value;
-  layer.animPhase = 0;
-  state.textLayers[0] = layer;
-}
-
-function syncText(){applyText()}
-
-function addTextLayer(){
-  state.textLayers.push({
-    text:'Nouveau texte', font:'Arial', size:40, color:'#ffffff',
-    opacity:100, x:80, y:200+state.textLayers.length*80,
-    shadow:'#000', shadowBlur:4, anim:'none', animPhase:0
-  });
-}
-
-function applyBackground() {
-  const bgType = document.getElementById('bgType').value;
-  state.bgType = bgType;
-  state.bgColor = document.getElementById('bgColor').value;
-  state.grad = {
-    c1:document.getElementById('grad1').value,
-    c2:document.getElementById('grad2').value,
-    c3:document.getElementById('grad3').value,
-    p1:+document.getElementById('grad1p').value,
-    p2:+document.getElementById('grad2p').value,
-    p3:+document.getElementById('grad3p').value,
-    angle:+document.getElementById('gradAngle').value
-  };
-  state.patternType = document.getElementById('patternType').value;
-  state.patternColor = document.getElementById('patternColor').value;
-  state.bgAnimType = document.getElementById('bgAnimType').value;
-  state.matrixCols = null;
-}
-
-function updateBgType(){
-  const t=document.getElementById('bgType').value;
-  document.getElementById('bgSolid').style.display=t==='solid'?'block':'none';
-  document.getElementById('bgGradient').style.display=t==='gradient'?'block':'none';
-  document.getElementById('bgPattern').style.display=t==='pattern'?'block':'none';
-  document.getElementById('bgAnimated').style.display=t==='animated'?'block':'none';
-}
-
-function changeResolution(val){
-  const [w,h]=val.split(',').map(Number);
-  canvas.width=w; canvas.height=h;
-  document.getElementById('textX').max=w;
-  document.getElementById('textY').max=h;
-  document.getElementById('imgX').max=w;
-  document.getElementById('imgY').max=h;
-}
-
-function applyFX(){
-  const slots=document.querySelectorAll('.fx-slot input[type=range]');
-  state.fx.brightness=+slots[0].value;
-  state.fx.contrast=+slots[1].value;
-  state.fx.saturation=+slots[2].value;
-  state.fx.vignette=+document.getElementById('vigAmt').value;
-  state.fx.chromo=+document.getElementById('chromoAmt').value;
-  state.fx.noise=+document.getElementById('noiseAmt').value;
-  state.fx.scanlines=+document.getElementById('slAmt').value;
-  state.fx.pixelSize=+document.getElementById('pixAmt').value;
-}
-
-function applyTransition(){
-  state.transition.active=true;
-  state.transition.progress=0;
-  state.transition.type=document.getElementById('transitionType').value;
-  state.transition.duration=+document.getElementById('transDuration').value;
-}
-
-// ============================================================
-// IMAGE IMPORT & ANIMATIONS
-// ============================================================
-document.getElementById('imageLoader').addEventListener('change',function(e){
-  const file=e.target.files[0]; if(!file)return;
-  const reader=new FileReader();
-  reader.onload=ev=>{
-    const img=new Image();
-    img.onload=()=>{state.img.obj=img};
-    img.src=ev.target.result;
-  };
-  reader.readAsDataURL(file);
-  addMedia('🖼️',file.name);
-});
-
-function syncImg(){
-  state.img.x=+document.getElementById('imgX').value;
-  state.img.y=+document.getElementById('imgY').value;
-  state.img.scale=+document.getElementById('imgScale').value;
-  state.img.rot=+document.getElementById('imgRot').value;
-  state.img.opacity=+document.getElementById('imgOpacity').value;
-}
-
-function spinImage(){
-  state.img.animSpin=!state.img.animSpin;
-  state.img.spinSpeed = state.img.animSpin?2:0;
-}
-function flashImage(){state.img.animFlash=!state.img.animFlash;if(!state.img.animFlash)state.img.flashVisible=true}
-function bounceImage(){state.img.animBounce=!state.img.animBounce;if(!state.img.animBounce)state.img.bounceY=0}
-function pulseImage(){state.img.animPulse=!state.img.animPulse}
-function shakeImage(){state.img.animShake=!state.img.animShake;if(!state.img.animShake)state.img.shakeX=0}
-function floatImage(){state.img.animFloat=!state.img.animFloat}
-
-// ============================================================
-// AUDIO ENGINE
-// ============================================================
-document.getElementById('musicLoader').addEventListener('change',async function(e){
-  const file=e.target.files[0]; if(!file)return;
-  addMedia('🎵',file.name);
-
-  if(!state.audioCtx) initAudioContext();
-
-  const arrayBuffer = await file.arrayBuffer();
-  state.audioBuffer = await state.audioCtx.decodeAudioData(arrayBuffer);
-
-  // Waveform display
-  drawWaveform(state.audioBuffer);
-
-  // Setup playback with gain
-  connectAudioGraph();
-
-  // Also show classic audio element for sync
-  const url = URL.createObjectURL(file);
-  const audio = document.createElement('audio');
-  audio.controls=true; audio.src=url; audio.id='audioElement';
-  audio.style.width='100%'; audio.style.marginTop='8px';
-  const box=document.getElementById('audioBox');
-  box.innerHTML='';box.appendChild(audio);
-  state.audioElement = audio;
-
-  // Sync audio play/pause with timeline
-  document.getElementById('playBtn').textContent='▶ Lecture';
-  state.playing=false;
-});
-
-function initAudioContext(){
-  state.audioCtx=new(window.AudioContext||window.webkitAudioContext)();
-  state.analyser=state.audioCtx.createAnalyser();
-  state.analyser.fftSize=128;
-  state.gainNode=state.audioCtx.createGain();
-  state.gainNode.gain.value=0.8;
-  // EQ setup
-  const freqs=[80,250,1000,4000,16000];
-  state.eqBands=freqs.map(freq=>{
-    const f=state.audioCtx.createBiquadFilter();
-    f.type=freq===80?'lowshelf':freq===16000?'highshelf':'peaking';
-    f.frequency.value=freq; f.gain.value=0;
-    return f;
-  });
-  // Reverb
-  state.reverbNode=state.audioCtx.createConvolver();
-  // Delay
-  state.delayNode=state.audioCtx.createDelay(2);
-  state.delayFeedback=state.audioCtx.createGain();
-  state.delayFeedback.gain.value=0;
-
-  // Chain: source → EQ chain → gain → analyser → destination
-  let prev=state.gainNode;
-  state.eqBands.forEach(f=>{prev.connect(f);prev=f;});
-  prev.connect(state.analyser);
-  state.analyser.connect(state.audioCtx.destination);
-
-  startVUMeter();
-}
-
-function connectAudioGraph(){
-  if(state.sourceNode){state.sourceNode.disconnect();}
-  state.sourceNode=state.audioCtx.createBufferSource();
-  state.sourceNode.buffer=state.audioBuffer;
-  state.sourceNode.loop=true;
-  state.sourceNode.connect(state.gainNode);
-}
-
-function setMasterVol(v){
-  if(state.gainNode) state.gainNode.gain.value=v/100;
-  if(state.audioElement) state.audioElement.volume=v/100;
-}
-
-function updateAudioFX(){
-  // EQ
-  updateEQ();
-}
-
-function updateEQ(){
-  document.querySelectorAll('.eq-band').forEach((el,i)=>{
-    if(state.eqBands[i]) state.eqBands[i].gain.value=+el.value;
-  });
-}
-
-function drawWaveform(buffer){
-  const cvs=document.getElementById('waveformCanvas');
-  const c=cvs.getContext('2d');
-  cvs.width=cvs.clientWidth||280; cvs.height=32;
-  const data=buffer.getChannelData(0);
-  const step=Math.ceil(data.length/cvs.width);
-  c.clearRect(0,0,cvs.width,cvs.height);
-  c.strokeStyle='#3b82f6'; c.lineWidth=1;
-  c.beginPath();
-  for(let i=0;i<cvs.width;i++){
-    let max=0;
-    for(let j=0;j<step;j++) max=Math.max(max,Math.abs(data[i*step+j]||0));
-    const y=cvs.height/2, h2=max*(cvs.height/2);
-    if(i===0)c.moveTo(i,y-h2);else c.lineTo(i,y-h2);
-  }
-  for(let i=cvs.width-1;i>=0;i--){
-    let max=0;
-    for(let j=0;j<step;j++) max=Math.max(max,Math.abs(data[i*step+j]||0));
-    const y=cvs.height/2, h2=max*(cvs.height/2);
-    c.lineTo(i,y+h2);
-  }
-  c.closePath();
-  c.fillStyle='rgba(59,130,246,.3)';c.fill();c.stroke();
-}
-
-function startVUMeter(){
-  const container=document.getElementById('vumeter');
-  container.innerHTML='';
-  const bars=[];
-  for(let i=0;i<16;i++){
-    const b=document.createElement('div');
-    b.className='vu-bar';
-    b.style.width='12px';
-    container.appendChild(b);
-    bars.push(b);
-  }
-  function update(){
-    if(!state.analyser){requestAnimationFrame(update);return;}
-    const data=new Uint8Array(state.analyser.frequencyBinCount);
-    state.analyser.getByteFrequencyData(data);
-    bars.forEach((b,i)=>{
-      const v=data[Math.floor(i*data.length/bars.length)]/255;
-      b.style.height=(v*36)+'px';
-      b.style.background=v>.8?'#ef4444':v>.5?'#f59e0b':'#22c55e';
-    });
-    requestAnimationFrame(update);
-  }
-  update();
-}
-
-// ============================================================
+// ─────────────────────────────────────────────
 // PLAYBACK
-// ============================================================
+// ─────────────────────────────────────────────
 function togglePlay(){
-  state.playing=!state.playing;
-  document.getElementById('playBtn').textContent=state.playing?'⏸ Pause':'▶ Lecture';
-
-  if(state.audioElement){
-    if(state.playing){
-      state.audioCtx?.resume();
-      state.audioElement.play();
-    }else{
-      state.audioElement.pause();
-    }
-  }
-  if(state.playing&&state.sourceNode&&state.audioCtx&&!state.sourceConnected){
-    try{state.sourceNode.start();state.sourceConnected=true;}catch(e){}
-  }
+  S.playing=!S.playing;
+  const btn=document.getElementById('playBtn');
+  btn.textContent=S.playing?'⏸ Pause':'▶ Lire';
+  if(S.audioEl){ S.playing?S.audioEl.play():S.audioEl.pause(); }
 }
 
-function setTime(t){
-  state.time=t;
-  updateTimecode();
-  updatePlayhead();
-  if(state.audioElement){
-    state.audioElement.currentTime=t;
-  }
+function syncAll(){
+  S.bgType=document.getElementById('bgType').value;
+  S.bgColor=document.getElementById('bgColor').value;
 }
 
-function updateTimecode(){
-  const t=state.time;
-  const m=Math.floor(t/60).toString().padStart(2,'0');
-  const s=Math.floor(t%60).toString().padStart(2,'0');
-  const f=Math.floor((t%1)*state.fps).toString().padStart(2,'0');
-  document.getElementById('timecode').textContent=`${m}:${s}:${f}`;
-  document.getElementById('kfTime').textContent=state.time.toFixed(2)+'s';
-}
-
-function updatePlayhead(){
-  const laneW=document.getElementById('laneVideo').clientWidth||800;
-  const px=80+(state.time/state.duration)*laneW*state.tlZoom;
-  document.getElementById('playhead').style.left=px+'px';
-}
-
-// ============================================================
-// TIMELINE ZOOM & RULER
-// ============================================================
-function zoomTL(dir){
-  state.tlZoom=Math.max(.5,Math.min(5,state.tlZoom+dir*.5));
-  document.getElementById('tlZoomLabel').textContent=state.tlZoom.toFixed(1)+'×';
-  drawRuler();
-}
-
-function drawRuler(){
-  const cvs=document.getElementById('rulerCanvas');
-  const c=cvs.getContext('2d');
-  cvs.width=cvs.clientWidth||800; cvs.height=20;
-  c.fillStyle='#1a1a1a'; c.fillRect(0,0,cvs.width,cvs.height);
-  c.fillStyle='#666'; c.font='9px monospace';
-  const step=1; // 1 second
-  const laneW=cvs.width-80;
-  const pxPerSec=laneW*state.tlZoom/state.duration;
-  for(let t=0;t<=state.duration;t+=step){
-    const x=80+t*pxPerSec;
-    const major=t%5===0;
-    c.strokeStyle=major?'#555':'#333'; c.lineWidth=1;
-    c.beginPath();c.moveTo(x,major?5:10);c.lineTo(x,20);c.stroke();
-    if(major){c.fillStyle='#666';c.fillText(t+'s',x+2,12);}
-  }
-}
-
-// ============================================================
+// ─────────────────────────────────────────────
 // SCENES
-// ============================================================
-function selectScene(i){
-  document.querySelectorAll('.scene-thumb').forEach((s,j)=>s.classList.toggle('active',j===i));
-  state.currentScene=i;
-  // capture current scene data
-}
-
+// ─────────────────────────────────────────────
 function addScene(){
-  const i=state.scenes.length;
-  state.scenes.push({name:`Scène ${i+1}`});
-  const div=document.createElement('div');
-  div.className='scene-thumb'; div.id='scene-'+i;
-  div.onclick=()=>selectScene(i);
-  const cvs=document.createElement('canvas');
-  cvs.width=110;cvs.height=62;cvs.id='thumb-'+i;
+  const id=S.scenes.length;
+  S.scenes.push({id,name:`Scène ${id+1}`});
+  const card=document.createElement('div');
+  card.className='scene-card'+(id===0?' active':'');
+  card.id='sc-'+id;
+  const cv=document.createElement('canvas');
+  cv.width=110;cv.height=62;cv.id='sct-'+id;
   const lbl=document.createElement('div');
-  lbl.className='scene-label';lbl.textContent=`Scène ${i+1}`;
-  div.appendChild(cvs);div.appendChild(lbl);
-  document.getElementById('scenes-bar').insertBefore(div,document.querySelector('.add-scene'));
+  lbl.className='scene-label';lbl.textContent=`Scène ${id+1}`;
+  const del=document.createElement('div');
+  del.className='scene-del';del.textContent='✕';
+  del.onclick=(e)=>{e.stopPropagation();removeScene(id);};
+  card.appendChild(cv);card.appendChild(lbl);card.appendChild(del);
+  card.onclick=()=>selectScene(id);
+  document.getElementById('scenesStrip').insertBefore(card,document.querySelector('.add-scene-btn'));
 }
 
-// Update scene thumbnails periodically
-setInterval(()=>{
-  document.querySelectorAll('[id^="thumb-"]').forEach(cvs=>{
-    const c=cvs.getContext('2d');
-    c.drawImage(canvas,0,0,cvs.width,cvs.height);
+function removeScene(id){
+  const el=document.getElementById('sc-'+id);
+  if(el) el.remove();
+  S.scenes=S.scenes.filter(s=>s.id!==id);
+}
+
+function selectScene(id){
+  S.currentScene=id;
+  document.querySelectorAll('.scene-card').forEach(c=>c.classList.toggle('active',c.id==='sc-'+id));
+}
+
+function updateSceneThumbs(){
+  document.querySelectorAll('[id^="sct-"]').forEach(cv=>{
+    const c2=cv.getContext('2d');
+    c2.drawImage(C,0,0,cv.width,cv.height);
   });
-},500);
-
-// ============================================================
-// MEDIA LIBRARY
-// ============================================================
-function addMedia(icon,name){
-  const div=document.createElement('div');
-  div.className='media-item';
-  div.innerHTML=`<span class="media-icon">${icon}</span><span>${name}</span>`;
-  document.getElementById('mediaLibrary').appendChild(div);
-  const info=document.getElementById('mediaLibrary').nextElementSibling;
-  if(info) info.textContent=document.querySelectorAll('.media-item').length+' fichier(s) importé(s)';
 }
 
-// ============================================================
+// ─────────────────────────────────────────────
+// AUDIO
+// ─────────────────────────────────────────────
+function loadAudio(input){
+  const file=input.files[0]; if(!file) return;
+  const url=URL.createObjectURL(file);
+  const el=document.createElement('audio');
+  el.controls=true; el.src=url;
+  el.style.cssText='width:100%;margin-top:6px;filter:invert(1) brightness(.8)';
+  const box=document.getElementById('audioPlayer');
+  box.innerHTML=''; box.appendChild(el);
+  S.audioEl=el;
+  el.volume=parseFloat(document.getElementById('volRange').value);
+
+  // Web Audio analyser
+  try{
+    if(!S.audioCtx) S.audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+    const src=S.audioCtx.createMediaElementSource(el);
+    S.analyser=S.audioCtx.createAnalyser();
+    S.analyser.fftSize=32;
+    src.connect(S.analyser);
+    S.analyser.connect(S.audioCtx.destination);
+    startMeter();
+  }catch(e){}
+}
+
+function setVol(v){ if(S.audioEl) S.audioEl.volume=v; }
+
+function startMeter(){
+  const m=document.getElementById('meter'); m.innerHTML='';
+  const bars=[];
+  for(let i=0;i<12;i++){const b=document.createElement('div');b.className='mbar';b.style.height='2px';m.appendChild(b);bars.push(b);}
+  function tick(){
+    if(!S.analyser){requestAnimationFrame(tick);return;}
+    const d=new Uint8Array(S.analyser.frequencyBinCount);
+    S.analyser.getByteFrequencyData(d);
+    bars.forEach((b,i)=>{const v=d[Math.floor(i*d.length/bars.length)]/255;b.style.height=(v*26+2)+'px';b.style.background=v>.8?'#ef4444':v>.5?'#f59e0b':'#22c55e';});
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+// ─────────────────────────────────────────────
+// IMAGE IMPORT
+// ─────────────────────────────────────────────
+function loadImg(input){
+  const file=input.files[0]; if(!file) return;
+  const r=new FileReader();
+  r.onload=e=>{const img=new Image();img.onload=()=>{S.imgObj=img;document.getElementById('imgControls').style.display='block';};img.src=e.target.result;};
+  r.readAsDataURL(file);
+}
+
+// ─────────────────────────────────────────────
 // EXPORT
-// ============================================================
-function exportFrame(){
-  const link=document.createElement('a');
-  link.download='novamotion_frame.png';
-  link.href=canvas.toDataURL('image/png');
-  link.click();
+// ─────────────────────────────────────────────
+function exportPNG(){
+  const a=document.createElement('a');a.download='novamotion.png';a.href=C.toDataURL('image/png');a.click();
 }
 
-function exportVideo(){
-  if(!state.audioElement||!state.audioElement.src){
-    alert('Aucun audio détecté. Export vidéo sans son (WebM).');
-    startVideoOnly();
-    return;
+function exportWEBM(){
+  S.recChunks=[];
+  const stream=C.captureStream(60);
+  let finalStream=stream;
+  if(S.audioEl&&S.audioCtx&&S.analyser){
+    try{
+      const dest=S.audioCtx.createMediaStreamDestination();
+      S.analyser.connect(dest);
+      finalStream=new MediaStream([...stream.getVideoTracks(),...dest.stream.getAudioTracks()]);
+    }catch(e){}
   }
-  startVideoOnly();
-}
-
-let recStream, recAudio, recDest;
-function startVideoOnly(){
-  document.getElementById('recBadge').style.display='block';
-  document.getElementById('recBtn').classList.add('recording');
-  state.chunks=[];
-  const vStream=canvas.captureStream(state.fps);
-  let finalStream=vStream;
-
-  if(state.audioCtx&&state.analyser){
-    recDest=state.audioCtx.createMediaStreamDestination();
-    state.analyser.connect(recDest);
-    const combined=new MediaStream([...vStream.getVideoTracks(),...recDest.stream.getAudioTracks()]);
-    finalStream=combined;
-  }
-
   const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
   const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
-  state.mediaRecorder=new MediaRecorder(finalStream,{mimeType:mime,videoBitsPerSecond:5000000});
-  state.mediaRecorder.ondataavailable=e=>{if(e.data.size>0)state.chunks.push(e.data)};
-  state.mediaRecorder.onstop=()=>{
-    document.getElementById('recBadge').style.display='none';
-    document.getElementById('recBtn').classList.remove('recording');
-    const blob=new Blob(state.chunks,{type:mime});
-    const url=URL.createObjectURL(blob);
-    const a=document.createElement('a');a.href=url;a.download='novamotion_export.webm';a.click();
+  S.mediaRec=new MediaRecorder(finalStream,{mimeType:mime});
+  S.mediaRec.ondataavailable=e=>{if(e.data.size>0)S.recChunks.push(e.data);};
+  S.mediaRec.onstop=()=>{
+    const blob=new Blob(S.recChunks,{type:mime});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='novamotion.webm';a.click();
+    document.getElementById('recBtn').classList.remove('active');
+    document.getElementById('recBtn').textContent='⏺ REC';
+    S.recording=false;
   };
-  state.mediaRecorder.start(100);
-  state.recording=true;
-  if(!state.playing) togglePlay();
+  S.mediaRec.start(100);
+  S.recording=true;
+  document.getElementById('recBtn').classList.add('active');
+  document.getElementById('recBtn').textContent='■ Stop';
+  if(!S.playing) togglePlay();
 }
 
-function toggleRecord(){
-  if(!state.recording){
-    startVideoOnly();
-  }else{
-    state.mediaRecorder?.stop();
-    state.recording=false;
-    if(recDest) try{state.analyser.disconnect(recDest);}catch(e){}
-  }
+function toggleRec(){
+  if(!S.recording){ exportWEBM(); }
+  else { S.mediaRec?.stop(); }
 }
 
-// ============================================================
-// KEYFRAMES
-// ============================================================
-function addKeyframe(){
-  state.keyframes.push({time:state.time, textX:state.textLayers[0]?.x, textY:state.textLayers[0]?.y, imgRot:state.img.rot});
-  state.keyframes.sort((a,b)=>a.time-b.time);
-  renderKFList();
+// ─────────────────────────────────────────────
+// RESOLUTION
+// ─────────────────────────────────────────────
+function setRes(v){
+  const [w,h]=v.split(',').map(Number);
+  C.width=w; C.height=h;
 }
 
-function renderKFList(){
-  const list=document.getElementById('kfList');
-  list.innerHTML='';
-  state.keyframes.forEach((kf,i)=>{
-    const row=document.createElement('div');
-    row.className='kf-row';
-    row.innerHTML=`<div class="kf-dot" title="Supprimer" onclick="state.keyframes.splice(${i},1);renderKFList()"></div><span class="kf-name">T=${kf.time.toFixed(2)}s</span><span class="kf-val">X:${Math.round(kf.textX||0)}</span><span class="kf-val">Y:${Math.round(kf.textY||0)}</span>`;
-    list.appendChild(row);
-  });
-}
+// ─────────────────────────────────────────────
+// INIT
+// ─────────────────────────────────────────────
+buildLogoGrid();
+addScene(); addScene(); // 2 scènes par défaut
+selectScene(0);
 
-// Draw easing curve
-function drawEasingCurve(){
-  const cvs=document.getElementById('curveCanvas');
-  const c=cvs.getContext('2d');
-  const W=cvs.width, H=cvs.height;
-  c.clearRect(0,0,W,H);
-  c.fillStyle='#0a0a0a';c.fillRect(0,0,W,H);
-  c.strokeStyle='#1e1e1e';c.lineWidth=1;
-  c.beginPath();c.moveTo(0,H/2);c.lineTo(W,H/2);c.stroke();
-  c.beginPath();c.moveTo(W/2,0);c.lineTo(W/2,H);c.stroke();
-  c.strokeStyle='#3b82f6';c.lineWidth=2;
-  const type=document.getElementById('easingType').value;
-  c.beginPath();
-  for(let i=0;i<=100;i++){
-    const t=i/100, y=1-applyEasing(t,type);
-    i===0?c.moveTo(t*W,y*H):c.lineTo(t*W,y*H);
-  }
-  c.stroke();
-}
+// sync bg type on change
+document.getElementById('bgType').addEventListener('change',e=>{ S.bgType=e.target.value; });
 
-function applyEasing(t,type){
-  switch(type){
-    case 'linear': return t;
-    case 'easeIn': return t*t*t;
-    case 'easeOut': return 1-(1-t)*(1-t)*(1-t);
-    case 'easeInOut': return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;
-    case 'bounce': return bounceEase(t);
-    case 'elastic': return t===0?0:t===1?1:Math.pow(2,-10*t)*Math.sin((t*10-0.75)*(2*Math.PI)/3)+1;
-  }
-  return t;
-}
-
-function bounceEase(t){
-  const n1=7.5625,d1=2.75;
-  if(t<1/d1)return n1*t*t;
-  if(t<2/d1)return n1*(t-=1.5/d1)*t+.75;
-  if(t<2.5/d1)return n1*(t-=2.25/d1)*t+.9375;
-  return n1*(t-=2.625/d1)*t+.984375;
-}
-
-document.getElementById('easingType').addEventListener('change',drawEasingCurve);
-drawEasingCurve();
-
-// ============================================================
-// DRAG & DROP CLIPS
-// ============================================================
-let dragged=null;
-document.querySelectorAll('.clip').forEach(c=>{
-  c.addEventListener('mousedown',e=>{
-    dragged=c;
-    const startX=e.clientX, origLeft=parseInt(c.style.left)||0;
-    const onMove=e2=>{
-      const dx=e2.clientX-startX;
-      c.style.left=Math.max(0,origLeft+dx)+'px';
-    };
-    const onUp=()=>{
-      document.removeEventListener('mousemove',onMove);
-      document.removeEventListener('mouseup',onUp);
-      dragged=null;
-    };
-    document.addEventListener('mousemove',onMove);
-    document.addEventListener('mouseup',onUp);
-  });
-});
-
-// ============================================================
-// DRAWRULER + INIT
-// ============================================================
-window.addEventListener('resize',drawRuler);
-setTimeout(drawRuler,100);
-
-// Start draw loop
-requestAnimationFrame(ts=>{state.lastTime=ts;state.fpsTimer=ts;drawFrame(ts)});
+requestAnimationFrame(ts=>{S.lastTS=ts; drawFrame(ts);});
 </script>
 </body>
 </html>
