@@ -747,45 +747,14 @@ function updateThumbs(){document.querySelectorAll('[id^="sct"]').forEach(cv=>{co
 
 function exportPNG(){const a=document.createElement('a');a.download='novamotion.png';a.href=C.toDataURL('image/png');a.click();}
 function exportWEBM(){
-  S.recChunks=[];
-  
-  // Piste vidéo depuis le canvas
-  const videoStream = C.captureStream(60);
-  
-  // Piste audio : on récupère la destination de l'AudioContext
-  let combinedStream = videoStream;
-  if(S.audioCtx && S.audioEl){
-    try{
-      const dest = S.audioCtx.createMediaStreamDestination();
-      // Reconnecte l'analyser vers la destination d'enregistrement aussi
-      S.analyser.connect(dest);
-      const audioTrack = dest.stream.getAudioTracks()[0];
-      if(audioTrack){
-        combinedStream = new MediaStream([
-          ...videoStream.getVideoTracks(),
-          audioTrack
-        ]);
-      }
-    }catch(e){ console.warn('Audio capture failed:', e); }
-  }
-
+  S.recChunks=[];const stream=C.captureStream(60);
   const types=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'];
   const mime=types.find(t=>MediaRecorder.isTypeSupported(t))||'video/webm';
-  S.mediaRec=new MediaRecorder(combinedStream,{mimeType:mime});
+  S.mediaRec=new MediaRecorder(stream,{mimeType:mime});
   S.mediaRec.ondataavailable=e=>{if(e.data.size>0)S.recChunks.push(e.data);};
-  S.mediaRec.onstop=()=>{
-    const a=document.createElement('a');
-    a.href=URL.createObjectURL(new Blob(S.recChunks,{type:mime}));
-    a.download='novamotion.webm';a.click();
-    document.getElementById('recBtn').classList.remove('active');
-    document.getElementById('recBtn').textContent='⏺ REC';
-    S.recording=false;
-  };
-  S.mediaRec.start(100);S.recording=true;
-  document.getElementById('recBtn').classList.add('active');
-  document.getElementById('recBtn').textContent='■ Stop';
+  S.mediaRec.onstop=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(S.recChunks,{type:mime}));a.download='novamotion.webm';a.click();document.getElementById('recBtn').classList.remove('active');document.getElementById('recBtn').textContent='⏺ REC';S.recording=false;};
+  S.mediaRec.start(100);S.recording=true;document.getElementById('recBtn').classList.add('active');document.getElementById('recBtn').textContent='■ Stop';
   if(!S.playing)togglePlay();
-}
 }
 function toggleRec(){if(!S.recording)exportWEBM();else S.mediaRec?.stop();}
 function setRes(v){const[w,h]=v.split(',').map(Number);C.width=w;C.height=h;}
